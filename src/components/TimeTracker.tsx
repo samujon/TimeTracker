@@ -408,6 +408,22 @@ export function TimeTracker() {
             setManualEndTime("");
           }
           setManualDescription(entry.description || "");
+          // Set duration if available
+          if (typeof entry.duration_seconds === "number") {
+            const hours = Math.floor(entry.duration_seconds / 3600).toString().padStart(2, "0");
+            const minutes = Math.floor((entry.duration_seconds % 3600) / 60).toString().padStart(2, "0");
+            setManualDuration(`${hours}:${minutes}`);
+          } else {
+            setManualDuration("");
+          }
+          if (entry.project_id) {
+            setSelectedProjectId(entry.project_id);
+            // Also set the project name in the input field for ProjectSelector
+            const project = projects.find((p) => p.id === entry.project_id);
+            if (project) {
+              setNewProjectName(project.name);
+            }
+          }
         }}
       />
 
