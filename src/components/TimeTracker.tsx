@@ -20,6 +20,7 @@ type TimeEntry = {
 type Project = {
   id: string;
   name: string;
+  color?: string;
 };
 
 export function TimeTracker() {
@@ -54,6 +55,7 @@ export function TimeTracker() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectColor, setNewProjectColor] = useState("#34d399");
   const [creatingProject, setCreatingProject] = useState(false);
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export function TimeTracker() {
     const loadProjects = async () => {
       const { data, error: err } = await supabase
         .from("projects")
-        .select("id, name")
+        .select("id, name, color")
         .order("created_at", { ascending: true });
 
       if (err) {
@@ -155,8 +157,8 @@ export function TimeTracker() {
 
     const { data, error: err } = await supabase
       .from("projects")
-      .insert({ name })
-      .select("id, name")
+      .insert({ name, color: newProjectColor })
+      .select("id, name, color")
       .single();
 
     if (err) {
@@ -165,6 +167,7 @@ export function TimeTracker() {
       setProjects((prev) => [...prev, data as Project]);
       setSelectedProjectId((data as Project).id);
       setNewProjectName("");
+      setNewProjectColor("#34d399");
     }
 
     setCreatingProject(false);
@@ -247,6 +250,8 @@ export function TimeTracker() {
           setSelectedProjectId={setSelectedProjectId}
           newProjectName={newProjectName}
           setNewProjectName={setNewProjectName}
+          newProjectColor={newProjectColor}
+          setNewProjectColor={setNewProjectColor}
           creatingProject={creatingProject}
           handleCreateProject={handleCreateProject}
           onDeleteProject={async (id: string) => {

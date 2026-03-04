@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 type Project = {
   id: string;
   name: string;
+  color?: string;
 };
 
 type ProjectSelectorProps = {
@@ -11,6 +12,8 @@ type ProjectSelectorProps = {
   setSelectedProjectId: (id: string) => void;
   newProjectName: string;
   setNewProjectName: (name: string) => void;
+  newProjectColor: string;
+  setNewProjectColor: (color: string) => void;
   creatingProject: boolean;
   handleCreateProject: (e: React.FormEvent) => void;
   onDeleteProject: (id: string) => void;
@@ -22,11 +25,22 @@ export function ProjectSelector({
   setSelectedProjectId,
   newProjectName,
   setNewProjectName,
+  newProjectColor,
+  setNewProjectColor,
   creatingProject,
   handleCreateProject,
   onDeleteProject,
 }: ProjectSelectorProps) {
-  const [tab, setTab] = useState<"add" | "select" | "delete">("add");
+  const [tab, setTab] = useState<"add" | "select" | "delete">(projects.length > 0 ? "select" : "add");
+
+  // Update tab if projects list changes (e.g., first project added or all deleted)
+  useEffect(() => {
+    if (projects.length === 0 && tab !== "add") {
+      setTab("add");
+    } else if (projects.length > 0 && tab === "add") {
+      setTab("select");
+    }
+  }, [projects.length]);
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
@@ -77,6 +91,16 @@ export function ProjectSelector({
               onChange={(e) => setNewProjectName(e.target.value)}
               placeholder="e.g. Programming, Language learning"
               className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-300">Color</label>
+            <input
+              type="color"
+              value={newProjectColor}
+              onChange={(e) => setNewProjectColor(e.target.value)}
+              className="mt-2 w-10 h-10 p-0 border-none bg-transparent cursor-pointer"
+              title="Pick a color for this task"
             />
           </div>
           <button
