@@ -1,4 +1,3 @@
-"use client";
 
 "use client";
 
@@ -27,6 +26,9 @@ type Project = {
 
 export function TimeTracker() {
   const supabase = getSupabaseClient();
+  if (!hasSupabaseEnv || !supabase) {
+    return <SetupScreen />;
+  }
   const hourOptions = React.useMemo(() => {
     const options: string[] = [];
     for (let h = 0; h < 24; h++) {
@@ -118,9 +120,7 @@ export function TimeTracker() {
     void loadProjects();
   }, [supabase]);
 
-  if (!hasSupabaseEnv || !supabase) {
-    return <SetupScreen />;
-  }
+
 
   const handleStart = () => {
     setError(null);
@@ -270,95 +270,93 @@ export function TimeTracker() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-zinc-100">
-      <div className="w-full max-w-3xl space-y-8 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-xl shadow-black/40">
-        <header className="flex items-center justify-between gap-4">
+    <div className="space-y-8">
+      <header className="flex items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Time Tracker</h1>
+          <p className="mt-1 text-xs text-zinc-400">Minimal, self-hosted tracking powered by Supabase.</p>
+        </div>
+        <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">Dark mode · Local Supabase</span>
+      </header>
+
+      <ProjectSelector
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+        setSelectedProjectId={setSelectedProjectId}
+        newProjectName={newProjectName}
+        setNewProjectName={setNewProjectName}
+        newProjectColor={newProjectColor}
+        setNewProjectColor={setNewProjectColor}
+        creatingProject={creatingProject}
+        handleCreateProject={handleCreateProject}
+        onDeleteProject={async (id: string) => {
+          setError(null);
+          const { error: err } = await supabase.from("projects").delete().eq("id", id);
+          if (err) {
+            setError(err.message);
+          } else {
+            setProjects((prev) => prev.filter((p) => p.id !== id));
+            if (selectedProjectId === id) setSelectedProjectId("");
+          }
+        }}
+      />
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 mt-8">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Time Tracker</h1>
-            <p className="mt-1 text-xs text-zinc-400">Minimal, self-hosted tracking powered by Supabase.</p>
+            <div className="text-4xl font-mono tabular-nums sm:text-5xl">{formattedElapsed}</div>
+            <p className="mt-2 text-xs text-zinc-400">{isRunning ? "Timer is running…" : "Timer is stopped."}</p>
           </div>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">Dark mode · Local Supabase</span>
-        </header>
+          <button
+            type="button"
+            onClick={handleToggle}
+            disabled={saving}
+            className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium shadow-lg shadow-black/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${isRunning ? "bg-rose-500 text-white hover:bg-rose-400" : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"} ${saving ? "opacity-70" : ""}`}
+          >
+            {isRunning ? "Stop" : "Start"}
+          </button>
+        </div>
+        <div className="mt-6">
+          <label className="block text-xs font-medium text-zinc-300">Description (optional)</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What are you working on?"
+            className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        {error && <p className="mt-4 text-xs text-rose-400">{error}</p>}
+      </section>
 
-        <ProjectSelector
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          setSelectedProjectId={setSelectedProjectId}
-          newProjectName={newProjectName}
-          setNewProjectName={setNewProjectName}
-          newProjectColor={newProjectColor}
-          setNewProjectColor={setNewProjectColor}
-          creatingProject={creatingProject}
-          handleCreateProject={handleCreateProject}
-          onDeleteProject={async (id: string) => {
-            setError(null);
-            const { error: err } = await supabase.from("projects").delete().eq("id", id);
-            if (err) {
-              setError(err.message);
-            } else {
-              setProjects((prev) => prev.filter((p) => p.id !== id));
-              if (selectedProjectId === id) setSelectedProjectId("");
-            }
-          }}
-        />
+      <ManualEntryForm
+        manualDate={manualDate}
+        setManualDate={setManualDate}
+        manualStartTime={manualStartTime}
+        setManualStartTime={setManualStartTime}
+        manualEndTime={manualEndTime}
+        setManualEndTime={setManualEndTime}
+        manualDuration={manualDuration}
+        setManualDuration={setManualDuration}
+        manualDescription={manualDescription}
+        setManualDescription={setManualDescription}
+        manualSaving={manualSaving}
+        handleManualSubmit={handleManualSubmit}
+        hourOptions={hourOptions}
+      />
 
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-4xl font-mono tabular-nums sm:text-5xl">{formattedElapsed}</div>
-              <p className="mt-2 text-xs text-zinc-400">{isRunning ? "Timer is running…" : "Timer is stopped."}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleToggle}
-              disabled={saving}
-              className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium shadow-lg shadow-black/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${isRunning ? "bg-rose-500 text-white hover:bg-rose-400" : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"} ${saving ? "opacity-70" : ""}`}
-            >
-              {isRunning ? "Stop" : "Start"}
-            </button>
-          </div>
-          <div className="mt-6">
-            <label className="block text-xs font-medium text-zinc-300">Description (optional)</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What are you working on?"
-              className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-          {error && <p className="mt-4 text-xs text-rose-400">{error}</p>}
-        </section>
-
-        <ManualEntryForm
-          manualDate={manualDate}
-          setManualDate={setManualDate}
-          manualStartTime={manualStartTime}
-          setManualStartTime={setManualStartTime}
-          manualEndTime={manualEndTime}
-          setManualEndTime={setManualEndTime}
-          manualDuration={manualDuration}
-          setManualDuration={setManualDuration}
-          manualDescription={manualDescription}
-          setManualDescription={setManualDescription}
-          manualSaving={manualSaving}
-          handleManualSubmit={handleManualSubmit}
-          hourOptions={hourOptions}
-        />
-
-        <RecentEntries
-          entries={entries}
-          onDeleteEntry={async (id: string) => {
-            setError(null);
-            const { error: err } = await supabase.from("time_entries").delete().eq("id", id);
-            if (err) {
-              setError(err.message);
-            } else {
-              setEntries((prev) => prev.filter((e) => e.id !== id));
-            }
-          }}
-        />
-      </div>
+      <RecentEntries
+        entries={entries}
+        onDeleteEntry={async (id: string) => {
+          setError(null);
+          const { error: err } = await supabase.from("time_entries").delete().eq("id", id);
+          if (err) {
+            setError(err.message);
+          } else {
+            setEntries((prev) => prev.filter((e) => e.id !== id));
+          }
+        }}
+      />
     </div>
   );
 }
