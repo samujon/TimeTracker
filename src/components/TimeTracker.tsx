@@ -7,9 +7,15 @@ import { SetupScreen } from "./SetupScreen";
 type TimeEntry = {
   id: string;
   description: string | null;
+  project_id: string | null;
   started_at: string;
   ended_at: string | null;
   duration_seconds: number | null;
+};
+
+type Project = {
+  id: string;
+  name: string;
 };
 
 export function TimeTracker() {
@@ -33,13 +39,18 @@ export function TimeTracker() {
   const [manualDescription, setManualDescription] = useState("");
   const [manualSaving, setManualSaving] = useState(false);
 
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [creatingProject, setCreatingProject] = useState(false);
+
   useEffect(() => {
     if (!supabase) return;
 
     const loadEntries = async () => {
       const { data, error: err } = await supabase
         .from("time_entries")
-        .select("id, description, started_at, ended_at, duration_seconds")
+        .select("id, description, project_id, started_at, ended_at, duration_seconds")
         .order("started_at", { ascending: false })
         .limit(10);
 
@@ -51,6 +62,25 @@ export function TimeTracker() {
     };
 
     void loadEntries();
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    const loadProjects = async () => {
+      const { data, error: err } = await supabase
+        .from("projects")
+        .select("id, name")
+        .order("created_at", { ascending: true });
+
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      setProjects(data ?? []);
+    };
+
+    void loadProjects();
   }, [supabase]);
 
   useEffect(() => {
@@ -132,6 +162,31 @@ export function TimeTracker() {
     }
   };
 
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newProjectName.trim();
+    if (!name) return;
+
+    setCreatingProject(true);
+    setError(null);
+
+    const { data, error: err } = await supabase
+      .from("projects")
+      .insert({ name })
+      .select("id, name")
+      .single();
+
+    if (err) {
+      setError(err.message);
+    } else if (data) {
+      setProjects((prev) => [...prev, data as Project]);
+      setSelectedProjectId((data as Project).id);
+      setNewProjectName("");
+    }
+
+    setCreatingProject(false);
+  };
+
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -160,10 +215,18 @@ export function TimeTracker() {
 
     setManualSaving(true);
 
+    const selectedProject = projects.find(
+      (project) => project.id === selectedProjectId,
+    );
+
+    const effectiveDescription =
+      manualDescription || selectedProject?.name || null;
+
     const { data, error: err } = await supabase
       .from("time_entries")
       .insert({
-        description: manualDescription || null,
+        description: effectiveDescription,
+        project_id: selectedProject ? selectedProject.id : null,
         started_at: start.toISOString(),
         ended_at: end.toISOString(),
         duration_seconds: durationSeconds,
@@ -200,6 +263,62 @@ export function TimeTracker() {
             Dark mode · Local Supabase
           </span>
         </header>
+
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-medium text-zinc-200">
+                Tasks
+              </h2>
+              <p className="mt-1 text-[11px] text-zinc-500">
+                Reuse consistent task names across days.
+              </p>
+            </div>
+          </div>
+          <form
+            onSubmit={handleCreateProject}
+            className="flex flex-col gap-3 sm:flex-row sm:items-center"
+          >
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-zinc-300">
+                New task name
+              </label>
+              <input
+                type="text"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder="e.g. Programming, Language learning"
+                className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={creatingProject || !newProjectName.trim()}
+              className="mt-2 inline-flex items-center justify-center rounded-full bg-zinc-100 px-5 py-2 text-xs font-medium text-zinc-950 shadow-md shadow-black/30 transition hover:bg-white disabled:opacity-60 sm:mt-6"
+            >
+              Add task
+            </button>
+          </form>
+          {projects.length > 0 && (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-zinc-300">
+                Selected task
+              </label>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="">No task selected</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
