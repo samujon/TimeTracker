@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -27,7 +27,15 @@ type Project = {
 
 export function TimeTracker() {
   const supabase = getSupabaseClient();
-  const hourOptions = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
+  const hourOptions = React.useMemo(() => {
+    const options: string[] = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        options.push(`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
+      }
+    }
+    return options;
+  }, []);
 
   // Timer logic
   const {
@@ -53,6 +61,7 @@ export function TimeTracker() {
   });
   const [manualStartTime, setManualStartTime] = useState("");
   const [manualEndTime, setManualEndTime] = useState("");
+  const [manualDuration, setManualDuration] = useState("");
   const [manualDescription, setManualDescription] = useState("");
   const [manualSaving, setManualSaving] = useState(false);
 
@@ -148,8 +157,8 @@ export function TimeTracker() {
       setEntries((prev) => [
         {
           ...data,
-          project_name: data.projects?.name || null,
-          project_color: data.projects?.color || null,
+          project_name: Array.isArray(data.projects) ? (data.projects as any[])[0]?.name || null : (data.projects as any)?.name || null,
+          project_color: Array.isArray(data.projects) ? (data.projects as any[])[0]?.color || null : (data.projects as any)?.color || null,
         },
         ...prev,
       ].slice(0, 10));
@@ -246,8 +255,8 @@ export function TimeTracker() {
       setEntries((prev) => [
         {
           ...data,
-          project_name: data.projects?.name || null,
-          project_color: data.projects?.color || null,
+          project_name: Array.isArray(data.projects) ? (data.projects as any[])[0]?.name || null : (data.projects as any)?.name || null,
+          project_color: Array.isArray(data.projects) ? (data.projects as any[])[0]?.color || null : (data.projects as any)?.color || null,
         },
         ...prev,
       ].slice(0, 10));
@@ -328,6 +337,8 @@ export function TimeTracker() {
           setManualStartTime={setManualStartTime}
           manualEndTime={manualEndTime}
           setManualEndTime={setManualEndTime}
+          manualDuration={manualDuration}
+          setManualDuration={setManualDuration}
           manualDescription={manualDescription}
           setManualDescription={setManualDescription}
           manualSaving={manualSaving}
