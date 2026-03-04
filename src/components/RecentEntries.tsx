@@ -4,6 +4,8 @@ type TimeEntry = {
   id: string;
   description: string | null;
   project_id: string | null;
+  project_name?: string | null;
+  project_color?: string | null;
   started_at: string;
   ended_at: string | null;
   duration_seconds: number | null;
@@ -60,9 +62,23 @@ export function RecentEntries({ entries, onDeleteEntry }: RecentEntriesProps) {
                   className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-zinc-100">
-                      {entry.description || "Untitled session"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      {entry.project_color && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border border-zinc-700"
+                          style={{ backgroundColor: entry.project_color }}
+                          title="Project color"
+                        />
+                      )}
+                      <p className="truncate text-zinc-100 font-medium">
+                        {entry.project_name || "Untitled task"}
+                      </p>
+                    </div>
+                    {entry.description?.trim() && (
+                      <p className="truncate text-zinc-400 text-xs mt-0.5">
+                        {entry.description}
+                      </p>
+                    )}
                     <p className="mt-1 text-[11px] text-zinc-500">
                       {started.toLocaleString()}
                     </p>

@@ -47,7 +47,10 @@ export function TimeTracker() {
   const [error, setError] = useState<string | null>(null);
 
   // Manual entry state
-  const [manualDate, setManualDate] = useState("");
+  const [manualDate, setManualDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().slice(0, 10);
+  });
   const [manualStartTime, setManualStartTime] = useState("");
   const [manualEndTime, setManualEndTime] = useState("");
   const [manualDescription, setManualDescription] = useState("");
@@ -66,7 +69,7 @@ export function TimeTracker() {
     const loadEntries = async () => {
       const { data, error: err } = await supabase
         .from("time_entries")
-        .select("id, description, project_id, started_at, ended_at, duration_seconds")
+        .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
         .order("started_at", { ascending: false })
         .limit(10);
 
@@ -74,7 +77,14 @@ export function TimeTracker() {
         setError(err.message);
         return;
       }
-      setEntries(data ?? []);
+      // Map project name into project_name for RecentEntries
+      setEntries(
+        (data ?? []).map((entry: any) => ({
+          ...entry,
+          project_name: entry.projects?.name || null,
+          project_color: entry.projects?.color || null,
+        }))
+      );
     };
 
     void loadEntries();
@@ -119,21 +129,30 @@ export function TimeTracker() {
     const endedAt = new Date();
     const durationSeconds = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
 
+    const selectedProject = projects.find((project) => project.id === selectedProjectId);
     const { data, error: err } = await supabase
       .from("time_entries")
       .insert({
         description: description || null,
+        project_id: selectedProject ? selectedProject.id : null,
         started_at: startedAt.toISOString(),
         ended_at: endedAt.toISOString(),
         duration_seconds: durationSeconds,
       })
-      .select("id, description, started_at, ended_at, duration_seconds")
+      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
       .single();
 
     if (err) {
       setError(err.message);
     } else if (data) {
-      setEntries((prev) => [data as TimeEntry, ...prev].slice(0, 10));
+      setEntries((prev) => [
+        {
+          ...data,
+          project_name: data.projects?.name || null,
+          project_color: data.projects?.color || null,
+        },
+        ...prev,
+      ].slice(0, 10));
     }
 
     setSaving(false);
@@ -207,8 +226,7 @@ export function TimeTracker() {
       (project) => project.id === selectedProjectId,
     );
 
-    const effectiveDescription =
-      manualDescription || selectedProject?.name || null;
+    const effectiveDescription = manualDescription || null;
 
     const { data, error: err } = await supabase
       .from("time_entries")
@@ -219,13 +237,20 @@ export function TimeTracker() {
         ended_at: end.toISOString(),
         duration_seconds: durationSeconds,
       })
-      .select("id, description, started_at, ended_at, duration_seconds")
+      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
       .single();
 
     if (err) {
       setError(err.message);
     } else if (data) {
-      setEntries((prev) => [data as TimeEntry, ...prev].slice(0, 10));
+      setEntries((prev) => [
+        {
+          ...data,
+          project_name: data.projects?.name || null,
+          project_color: data.projects?.color || null,
+        },
+        ...prev,
+      ].slice(0, 10));
       setManualDescription("");
       setManualDate("");
       setManualStartTime("");

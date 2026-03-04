@@ -84,7 +84,7 @@ export function ManualEntryForm({
             type="text"
             inputMode="numeric"
             placeholder="17:30"
-            list="time-options"
+            list="end-time-options"
             value={manualEndTime}
             onChange={(e) => setManualEndTime(e.target.value)}
             className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -104,6 +104,16 @@ export function ManualEntryForm({
         {hourOptions.map((value) => (
           <option key={value} value={value} />
         ))}
+      </datalist>
+      <datalist id="end-time-options">
+        {hourOptions
+          .filter((value) => {
+            if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return true;
+            return value > manualStartTime;
+          })
+          .map((value) => (
+            <option key={value} value={value} />
+          ))}
       </datalist>
     </section>
   );
