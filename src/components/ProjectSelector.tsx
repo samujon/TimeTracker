@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
 
 type Project = {
   id: string;
@@ -31,16 +33,25 @@ export function ProjectSelector({
   handleCreateProject,
   onDeleteProject,
 }: ProjectSelectorProps) {
-  const [tab, setTab] = useState<"add" | "select" | "delete">(projects.length > 0 ? "select" : "add");
+  const [tab, setTab] = useState<"add" | "select" | "delete">("add");
+  // Popover state for color picker
+  const [showColorPopover, setShowColorPopover] = useState(false);
+  const colorPopoverRef = useRef(null);
 
-  // Update tab if projects list changes (e.g., first project added or all deleted)
+  // Close popover on outside click
   useEffect(() => {
-    if (projects.length === 0 && tab !== "add") {
-      setTab("add");
-    } else if (projects.length > 0 && tab === "add") {
-      setTab("select");
+    if (!showColorPopover) return;
+    function handleClick(e) {
+      if (
+        colorPopoverRef.current &&
+        !(colorPopoverRef.current).contains(e.target)
+      ) {
+        setShowColorPopover(false);
+      }
     }
-  }, [projects.length]);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showColorPopover]);
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
@@ -82,26 +93,67 @@ export function ProjectSelector({
           className="flex flex-col gap-3 sm:flex-row sm:items-center"
         >
           <div className="flex-1">
-            <label className="block text-xs font-medium text-zinc-300">
-              New task name
-            </label>
+            <label className="block text-xs font-medium text-zinc-300 mb-2">New task name</label>
             <input
               type="text"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               placeholder="e.g. Programming, Language learning"
-              className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              disabled={creatingProject}
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-300">Color</label>
-            <input
-              type="color"
-              value={newProjectColor}
-              onChange={(e) => setNewProjectColor(e.target.value)}
-              className="mt-2 w-10 h-10 p-0 border-none bg-transparent cursor-pointer"
-              title="Pick a color for this task"
-            />
+          <div className="relative flex-shrink-0 mt-4 sm:mt-0">
+            <label className="block text-xs font-medium text-zinc-300 mb-2 text-center">Color</label>
+            <button
+              type="button"
+              className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 flex items-center justify-center cursor-pointer"
+              style={{ backgroundColor: newProjectColor }}
+              aria-label="Choose color"
+              onClick={() => setShowColorPopover((v) => !v)}
+            >
+              <span className="sr-only">Choose color</span>
+            </button>
+            {showColorPopover && (
+              <div
+                ref={colorPopoverRef}
+                className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-700 bg-zinc-900 shadow-lg flex flex-col items-center"
+                style={{ minWidth: 180 }}
+              >
+                <div className="flex flex-wrap gap-1 mb-2 justify-center">
+                  {[
+                    "#ef4444", // red
+                    "#f59e42", // orange
+                    "#fbbf24", // yellow
+                    "#22d3ee", // cyan
+                    "#34d399", // green
+                    "#6366f1", // indigo
+                    "#a78bfa", // purple
+                    "#f472b6", // pink
+                    "#64748b", // slate
+                    "#f1f5f9", // light
+                    "#18181b", // dark
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`w-6 h-6 rounded-full border-2 transition-transform ${newProjectColor === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-700"}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => { setNewProjectColor(color); setShowColorPopover(false); }}
+                      aria-label={`Choose color ${color}`}
+                    />
+                  ))}
+                </div>
+                <input
+                  type="color"
+                  value={newProjectColor}
+                  onChange={(e) => { setNewProjectColor(e.target.value); setShowColorPopover(false); }}
+                  className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 cursor-pointer"
+                  title="Pick a custom color for this task"
+                  style={{ minWidth: 32 }}
+                />
+              </div>
+            )}
           </div>
           <button
             type="submit"
@@ -114,22 +166,32 @@ export function ProjectSelector({
       )}
 
       {tab === "select" && projects.length > 0 && (
-        <div className="mt-4">
-          <label className="block text-xs font-medium text-zinc-300">
-            Selected task
-          </label>
-          <select
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="">No task selected</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex-1 flex items-center gap-2">
+            <label className="block text-xs font-medium text-zinc-300">
+              Selected task
+            </label>
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="mt-2 flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              style={{ minWidth: 0 }}
+            >
+              <option value="">No task selected</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            {selectedProjectId && (
+              <span
+                className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 self-center"
+                style={{ backgroundColor: (projects.find(p => p.id === selectedProjectId)?.color || '#34d399') }}
+                title="Task color"
+              />
+            )}
+          </div>
         </div>
       )}
 
@@ -137,7 +199,14 @@ export function ProjectSelector({
         <ul className="mt-4 divide-y divide-zinc-800">
           {projects.map((project) => (
             <li key={project.id} className="flex items-center justify-between py-1">
-              <span className="text-sm text-zinc-100">{project.name}</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700"
+                  style={{ backgroundColor: project.color || '#34d399' }}
+                  title="Task color"
+                />
+                <span className="text-sm text-zinc-100">{project.name}</span>
+              </div>
               <button
                 type="button"
                 onClick={() => onDeleteProject(project.id)}

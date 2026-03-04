@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import { useEffect, useState } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
