@@ -1,4 +1,7 @@
 import React, { useRef, useState } from "react";
+import DatePicker from "react-datepicker";
+import { sv } from "date-fns/locale/sv";
+import "react-datepicker/dist/react-datepicker.css";
 
 type ManualEntryFormProps = {
   manualDate: string;
@@ -179,11 +182,15 @@ export function ManualEntryForm({
           <label className="block text-xs font-medium text-zinc-300">
             Date
           </label>
-          <input
-            type="date"
-            value={manualDate}
-            onChange={(e) => setManualDate(e.target.value)}
+          <DatePicker
+            selected={manualDate ? new Date(manualDate) : null}
+            onChange={(date: Date | null) => date && setManualDate(date.toISOString().slice(0, 10))}
+            dateFormat="yyyy-MM-dd"
+            showWeekNumbers
+            locale={sv}
+            calendarStartDay={1}
             className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            popperClassName="z-50"
           />
         </div>
         <div className="space-y-2">

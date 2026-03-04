@@ -41,15 +41,17 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
   if (groupBy === "period") {
     // Stacked by project, x-axis is period (day, week, hour)
     if (view === "weekly") {
-      labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      // For each project, build a dataset for each day
+      // Start week on Monday (ISO)
+      labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       datasets = allProjectIds.map((pid) => {
         const dayTotals = Array(7).fill(0);
         data?.forEach((entry: any) => {
           if ((entry.project_id || "(none)") === pid) {
             const d = new Date(entry.started_at);
-            const day = d.getDay();
-            dayTotals[day] += entry.duration_seconds || 0;
+            // getDay: 0=Sun, 1=Mon, ..., 6=Sat; ISO: 1=Mon, ..., 7=Sun
+            let isoDay = d.getDay();
+            isoDay = isoDay === 0 ? 6 : isoDay - 1; // 0=Mon, ..., 6=Sun
+            dayTotals[isoDay] += entry.duration_seconds || 0;
           }
         });
         return {
@@ -60,19 +62,52 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
         };
       });
     } else if (view === "monthly") {
-      labels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"];
+      // Group by ISO weeks in the selected month
+      // Find all ISO weeks in the month
+      const year = selectedDate.getFullYear();
+      const month = selectedDate.getMonth();
+      // Get first and last day of month
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      // Collect all ISO week numbers in the month
+      const weekSet = new Set<number>();
+      for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+        // ISO week: week starts on Monday
+        const temp = new Date(d);
+        const day = temp.getDay();
+        const monday = new Date(temp);
+        monday.setDate(temp.getDate() - ((day + 6) % 7));
+        // Get ISO week number
+        const jan4 = new Date(monday.getFullYear(), 0, 4);
+        const week1Monday = new Date(jan4);
+        week1Monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+        const weekNum = Math.round(((monday.getTime() - week1Monday.getTime()) / 86400000) / 7 + 1);
+        weekSet.add(weekNum);
+      }
+      const weekNumbers = Array.from(weekSet).sort((a, b) => a - b);
+      labels = weekNumbers.map((w) => `Week ${w}`);
       datasets = allProjectIds.map((pid) => {
-        const weekTotals = Array(6).fill(0);
+        const weekTotals: Record<number, number> = {};
+        weekNumbers.forEach((w) => (weekTotals[w] = 0));
         data?.forEach((entry: any) => {
           if ((entry.project_id || "(none)") === pid) {
             const d = new Date(entry.started_at);
-            const week = Math.floor((d.getDate() - 1) / 7);
-            weekTotals[week] += entry.duration_seconds || 0;
+            const temp = new Date(d);
+            const day = temp.getDay();
+            const monday = new Date(temp);
+            monday.setDate(temp.getDate() - ((day + 6) % 7));
+            const jan4 = new Date(monday.getFullYear(), 0, 4);
+            const week1Monday = new Date(jan4);
+            week1Monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+            const weekNum = Math.round(((monday.getTime() - week1Monday.getTime()) / 86400000) / 7 + 1);
+            if (weekTotals[weekNum] !== undefined) {
+              weekTotals[weekNum] += entry.duration_seconds || 0;
+            }
           }
         });
         return {
           label: projectMap[pid].name,
-          data: weekTotals.map((s) => Math.round(s / 60)),
+          data: weekNumbers.map((w) => Math.round(weekTotals[w] / 60)),
           backgroundColor: projectMap[pid].color,
           stack: "tasks",
         };
