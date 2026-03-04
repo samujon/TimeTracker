@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Minimal Time Tracker",
+  title: "Time Tracker",
   description: "Self-hosted time tracking with Supabase",
 };
 

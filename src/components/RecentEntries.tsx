@@ -1,4 +1,5 @@
-import React from "react";
+import { ClipboardDocumentIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { EditEntryModal } from "./EditEntryModal";
 
 type TimeEntry = {
   id: string;
@@ -14,9 +15,11 @@ type TimeEntry = {
 type RecentEntriesProps = {
   entries: TimeEntry[];
   onDeleteEntry?: (id: string) => void;
+  onEditEntry?: (entry: TimeEntry) => void;
+  onCopyToManual?: (entry: TimeEntry) => void;
 };
 
-export function RecentEntries({ entries, onDeleteEntry }: RecentEntriesProps) {
+export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToManual }: RecentEntriesProps) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -80,21 +83,50 @@ export function RecentEntries({ entries, onDeleteEntry }: RecentEntriesProps) {
                       </p>
                     )}
                     <p className="mt-1 text-[11px] text-zinc-500">
-                      {started.toLocaleString()}
+                      {started.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
+                      {ended && (
+                        <>
+                          {" → "}
+                          {ended.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="shrink-0 rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 font-mono text-[11px] tabular-nums text-zinc-200">
                       {hours}:{minutes}:{seconds}
                     </span>
+                    {onCopyToManual && (
+                      <button
+                        type="button"
+                        onClick={() => onCopyToManual(entry)}
+                        className="rounded bg-blue-700 p-2 text-xs text-white hover:bg-blue-600"
+                        title="Copy to manual entry"
+                        aria-label="Copy"
+                      >
+                        <ClipboardDocumentIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    {onEditEntry && (
+                      <button
+                        type="button"
+                        onClick={() => onEditEntry(entry)}
+                        className="rounded bg-emerald-700 p-2 text-xs text-white hover:bg-emerald-600"
+                        title="Edit entry"
+                        aria-label="Edit"
+                      >
+                        <PencilSquareIcon className="h-5 w-5" />
+                      </button>
+                    )}
                     {onDeleteEntry && (
                       <button
                         type="button"
                         onClick={() => onDeleteEntry(entry.id)}
-                        className="rounded bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-500"
+                        className="rounded bg-rose-600 p-2 text-xs text-white hover:bg-rose-500"
                         title="Delete entry"
+                        aria-label="Delete"
                       >
-                        Delete
+                        <TrashIcon className="h-5 w-5" />
                       </button>
                     )}
                   </div>

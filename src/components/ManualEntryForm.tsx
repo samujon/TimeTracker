@@ -183,8 +183,16 @@ export function ManualEntryForm({
             Date
           </label>
           <DatePicker
-            selected={manualDate ? new Date(manualDate) : null}
-            onChange={(date: Date | null) => date && setManualDate(date.toISOString().slice(0, 10))}
+            selected={manualDate ? new Date(manualDate + 'T00:00:00') : null}
+            onChange={(date: Date | null) => {
+              if (date) {
+                // Format as yyyy-MM-dd in local time
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                setManualDate(`${year}-${month}-${day}`);
+              }
+            }}
             dateFormat="yyyy-MM-dd"
             showWeekNumbers
             locale={sv}

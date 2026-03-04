@@ -9,6 +9,8 @@ import { ProjectSelector } from "./ProjectSelector";
 import { ManualEntryForm } from "./ManualEntryForm";
 import { RecentEntries } from "./RecentEntries";
 
+import { EditEntryModal } from "./EditEntryModal";
+
 type TimeEntry = {
   id: string;
   description: string | null;
@@ -25,6 +27,40 @@ type Project = {
 };
 
 export function TimeTracker() {
+  const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
+  // Edit entry handler
+  const handleEditEntry = (entry: TimeEntry) => {
+    setEditingEntry(entry);
+  };
+
+  const handleSaveEditEntry = async (update: { id: string; description: string; project_id: string; started_at: string; ended_at: string }) => {
+    if (!supabase) return;
+    const { data, error: err } = await supabase
+      .from("time_entries")
+      .update({
+        description: update.description,
+        project_id: update.project_id,
+        started_at: update.started_at,
+        ended_at: update.ended_at,
+      })
+      .eq("id", update.id)
+      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
+      .single();
+    if (err) {
+      setError(err.message);
+    } else if (data) {
+      setEntries((prev) => prev.map((e) =>
+        e.id === update.id
+          ? {
+              ...data,
+              project_name: Array.isArray(data.projects) ? (data.projects as any[])[0]?.name || null : (data.projects as any)?.name || null,
+              project_color: Array.isArray(data.projects) ? (data.projects as any[])[0]?.color || null : (data.projects as any)?.color || null,
+            }
+          : e
+      ));
+      setEditingEntry(null);
+    }
+  };
   const supabase = getSupabaseClient();
   if (!hasSupabaseEnv || !supabase) {
     return <SetupScreen />;
@@ -356,7 +392,33 @@ export function TimeTracker() {
             setEntries((prev) => prev.filter((e) => e.id !== id));
           }
         }}
+        onEditEntry={handleEditEntry}
+        onCopyToManual={(entry) => {
+          // Set manual entry fields from the selected entry
+          // Parse date and times from started_at and ended_at
+          const started = entry.started_at ? new Date(entry.started_at) : null;
+          const ended = entry.ended_at ? new Date(entry.ended_at) : null;
+          if (started) {
+            setManualDate(started.toISOString().slice(0, 10));
+            setManualStartTime(started.toTimeString().slice(0, 5));
+          }
+          if (ended) {
+            setManualEndTime(ended.toTimeString().slice(0, 5));
+          } else {
+            setManualEndTime("");
+          }
+          setManualDescription(entry.description || "");
+        }}
       />
+
+      {editingEntry && (
+        <EditEntryModal
+          entry={editingEntry}
+          projects={projects}
+          onSave={handleSaveEditEntry}
+          onClose={() => setEditingEntry(null)}
+        />
+      )}
     </div>
   );
 }

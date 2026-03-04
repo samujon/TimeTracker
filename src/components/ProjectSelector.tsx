@@ -188,7 +188,7 @@ export function ProjectSelector({
                     <input
                       type="color"
                       value={newProjectColor}
-                      onChange={(e) => { setNewProjectColor(e.target.value); setShowColorPopover(false); }}
+                      onChange={(e) => { setNewProjectColor(e.target.value); }}
                       className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 cursor-pointer"
                       title="Pick a custom color for this task"
                       style={{ minWidth: 32 }}
