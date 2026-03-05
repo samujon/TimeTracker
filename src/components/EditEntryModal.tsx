@@ -101,18 +101,22 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
             <div className="flex-1">
               <label className="block text-xs font-medium text-zinc-300 mb-1">Start time</label>
               <input
-                type="time"
+                type="text"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
+                placeholder="HH:mm"
+                pattern="[0-2][0-9]:[0-5][0-9]"
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-medium text-zinc-300 mb-1">End time</label>
               <input
-                type="time"
+                type="text"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
+                placeholder="HH:mm"
+                pattern="[0-2][0-9]:[0-5][0-9]"
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
