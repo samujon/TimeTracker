@@ -190,7 +190,7 @@ export function ProjectSelector({
                 <div className="relative flex-shrink-0" ref={editColorPopoverRef}>
                   <button
                     type="button"
-                    className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                    className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 flex items-center justify-center ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
                     style={{ backgroundColor: proj.color || DEFAULT_PROJECT_COLOR }}
                     title="Edit task color"
                     aria-label="Edit task color"
@@ -245,7 +245,7 @@ export function ProjectSelector({
                 <div className="relative" ref={editColorProjectId === project.id ? editColorPopoverRef : null}>
                   <button
                     type="button"
-                    className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                    className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
                     style={{ backgroundColor: project.color || '#34d399' }}
                     title="Edit task color"
                     aria-label="Edit task color"

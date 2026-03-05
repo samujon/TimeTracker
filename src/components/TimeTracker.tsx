@@ -401,8 +401,8 @@ export function TimeTracker() {
                 onClick={handleToggle}
                 disabled={saving}
                 className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium shadow-lg shadow-black/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${isRunning
-                    ? "bg-rose-500 text-white hover:bg-rose-400"
-                    : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+                  ? "bg-rose-500 text-white hover:bg-rose-400"
+                  : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
                   } ${saving ? "opacity-70" : ""}`}
               >
                 {isRunning ? "Stop" : "Start"}
