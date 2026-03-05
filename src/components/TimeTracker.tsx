@@ -178,7 +178,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       const project = data as Project;
       setProjects((prev) => [...prev, project]);
       setSelectedProjectId(project.id);
-      setNewProjectName("");
+      setNewProjectName(project.name);
       setNewProjectColor(DEFAULT_PROJECT_COLOR);
     }
 
