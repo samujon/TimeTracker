@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-
-type Project = {
-  id: string;
-  name: string;
-  color?: string;
-};
+import React, { useState, useRef } from "react";
+import type { Project } from "@/types";
+import { PROJECT_COLORS, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 type ProjectSelectorProps = {
   projects: Project[];
@@ -34,28 +31,19 @@ export function ProjectSelector({
   onDeleteProject,
 }: ProjectSelectorProps) {
   const [tab, setTab] = useState<"main" | "delete">("main");
-  // Popover state for color picker
   const [showColorPopover, setShowColorPopover] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLDivElement | null>(null);
 
-  // Close popover on outside click
-  useEffect(() => {
-    if (!showColorPopover) return;
-    function handleClick(e: MouseEvent) {
-      if (
-        colorPopoverRef.current &&
-        !colorPopoverRef.current.contains(e.target as Node)
-      ) {
-        setShowColorPopover(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showColorPopover]);
+  // Close colour popover on outside click
+  useClickOutside(colorPopoverRef, () => setShowColorPopover(false), showColorPopover);
+
+  // Close project dropdown on outside click
+  useClickOutside(inputRef, () => setDropdownOpen(false), dropdownOpen);
 
 
-    return (
+  return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
@@ -87,7 +75,7 @@ export function ProjectSelector({
         <form onSubmit={handleCreateProject} className="flex flex-col gap-2">
           <label className="block text-xs font-medium text-zinc-300 mb-1">Task</label>
           <div className="flex items-center gap-2 relative">
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" ref={inputRef}>
               <input
                 type="text"
                 value={newProjectName}
@@ -101,11 +89,6 @@ export function ProjectSelector({
                   }
                 }}
                 onFocus={() => setDropdownOpen(true)}
-                onBlur={() => {
-                  setTimeout(() => {
-                    setDropdownOpen(false);
-                  }, 100);
-                }}
                 onDoubleClick={() => setDropdownOpen(true)}
                 className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 placeholder="Type or pick a task"
@@ -162,19 +145,7 @@ export function ProjectSelector({
                     onMouseDown={e => e.preventDefault()}
                   >
                     <div className="flex flex-wrap gap-1 mb-2 justify-center">
-                      {[
-                        "#ef4444", // red
-                        "#f59e42", // orange
-                        "#fbbf24", // yellow
-                        "#22d3ee", // cyan
-                        "#34d399", // green
-                        "#6366f1", // indigo
-                        "#a78bfa", // purple
-                        "#f472b6", // pink
-                        "#64748b", // slate
-                        "#f1f5f9", // light
-                        "#18181b", // dark
-                      ].map((color) => (
+                      {PROJECT_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
@@ -211,7 +182,7 @@ export function ProjectSelector({
             {projects.find(p => p.name === newProjectName) && (
               <span
                 className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 ml-2"
-                style={{ backgroundColor: (projects.find(p => p.name === newProjectName)?.color || '#34d399') }}
+                style={{ backgroundColor: (projects.find(p => p.name === newProjectName)?.color || DEFAULT_PROJECT_COLOR) }}
                 title="Task color"
               />
             )}

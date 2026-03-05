@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
 import { TimeTracker } from "@/components/TimeTracker";
-import { StatisticsPanel } from "@/components/StatisticsPanel";
+import { StatsView } from "@/components/StatsView";
 
 export default function Home() {
   const [tab, setTab] = useState<"tracker" | "stats">("tracker");
   return (
     <div className="flex min-h-screen flex-col items-center bg-zinc-950 px-4 py-12 text-zinc-100">
       <div className="w-full max-w-3xl">
-        {/* Tabs/bookmarks UI */}
         <div className="flex mb-0 w-full">
           <button
             className={`w-1/2 px-6 py-2 rounded-t-2xl font-medium text-sm transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900
@@ -26,7 +25,17 @@ export default function Home() {
           </button>
         </div>
         <div className="rounded-b-2xl border-x border-b border-zinc-800 bg-zinc-900/60 p-8">
-          {tab === "tracker" ? <TimeTracker /> : <StatisticsPanel />}
+          {tab === "tracker" ? (
+            <TimeTracker />
+          ) : (
+            <div className="space-y-6">
+              <header>
+                <h1 className="text-xl font-semibold tracking-tight">Statistics</h1>
+                <p className="mt-1 text-xs text-zinc-400">View your tracked time by day, week, or month.</p>
+              </header>
+              <StatsView />
+            </div>
+          )}
         </div>
       </div>
     </div>

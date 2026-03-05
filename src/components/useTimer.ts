@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 export function useTimer() {
   const [isRunning, setIsRunning] = useState(false);
@@ -7,10 +7,11 @@ export function useTimer() {
 
   useEffect(() => {
     if (!isRunning || !startedAt) return;
-    const id = window.setInterval(() => {
+    // Use plain setInterval — window.setInterval breaks in SSR environments.
+    const id = setInterval(() => {
       setElapsedMs(Date.now() - startedAt.getTime());
     }, 500);
-    return () => window.clearInterval(id);
+    return () => clearInterval(id);
   }, [isRunning, startedAt]);
 
   const currentElapsed = useMemo(() => {
@@ -20,24 +21,40 @@ export function useTimer() {
 
   const formattedElapsed = useMemo(() => {
     const totalSeconds = Math.floor(currentElapsed / 1000);
-    const hours = Math.floor(totalSeconds / 3600)
-      .toString()
-      .padStart(2, "0");
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-      .toString()
-      .padStart(2, "0");
+    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, "0");
+    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, "0");
     const seconds = (totalSeconds % 60).toString().padStart(2, "0");
     return `${hours}:${minutes}:${seconds}`;
   }, [currentElapsed]);
 
+  /** Begin timing from now. */
+  const start = useCallback(() => {
+    setStartedAt(new Date());
+    setElapsedMs(0);
+    setIsRunning(true);
+  }, []);
+
+  /**
+   * Pause the timer without clearing `startedAt`.
+   * Call `reset()` after you have finished reading `startedAt`.
+   */
+  const stop = useCallback(() => {
+    setIsRunning(false);
+  }, []);
+
+  /** Clear timer state back to initial values. */
+  const reset = useCallback(() => {
+    setIsRunning(false);
+    setStartedAt(null);
+    setElapsedMs(0);
+  }, []);
+
   return {
     isRunning,
-    setIsRunning,
-    startedAt,
-    setStartedAt,
-    elapsedMs,
-    setElapsedMs,
-    currentElapsed,
+    startedAt,        // read-only — do NOT mutate from outside
     formattedElapsed,
+    start,
+    stop,
+    reset,
   };
 }

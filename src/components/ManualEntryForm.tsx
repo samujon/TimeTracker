@@ -2,6 +2,9 @@ import React, { useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import { sv } from "date-fns/locale/sv";
 import "react-datepicker/dist/react-datepicker.css";
+import { parseDuration, buildHourOptions, formatLocalDate } from "@/lib/timeUtils";
+import { MINUTES_PER_DAY } from "@/lib/constants";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 type ManualEntryFormProps = {
   manualDate: string;
@@ -34,123 +37,74 @@ export function ManualEntryForm({
   handleManualSubmit,
   hourOptions: propHourOptions,
 }: ManualEntryFormProps) {
-    // Track if end time was manually edited (overrides duration)
-    const [endManuallyEdited, setEndManuallyEdited] = useState(false);
+  const [endManuallyEdited, setEndManuallyEdited] = useState(false);
 
-    // Parse duration string (e.g., "1h 15m", "90m", "1:5", "01:30", "1:30") to minutes
-    function parseDuration(str: string): number | null {
-      if (!str) return null;
-      // Accept h:m, hh:mm, h:mm (single/double digit hours, always 1-2 digit minutes)
-      const colonMatch = str.match(/^(\d{1,2}):(\d{1,2})$/);
-      if (colonMatch) {
-        const hours = parseInt(colonMatch[1], 10);
-        const mins = parseInt(colonMatch[2], 10);
-        if (isNaN(hours) || isNaN(mins) || mins > 59) return null;
-        return hours * 60 + mins;
-      }
-      // Accept 1h 15m, 90m, etc
-      const regex = /(?:(\d+)\s*h)?\s*(\d+)?\s*m?/i;
-      const match = str.match(regex);
-      if (!match) return null;
-      const hours = match[1] ? parseInt(match[1], 10) : 0;
-      const mins = match[2] ? parseInt(match[2], 10) : 0;
-      if (isNaN(hours) && isNaN(mins)) return null;
-      return hours * 60 + mins;
-    }
-
-    // When start time or duration changes, update end time (unless end was manually edited)
-    React.useEffect(() => {
-      if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return;
-      if (!manualDuration || endManuallyEdited) return;
-      const mins = parseDuration(manualDuration);
-      if (mins == null) return;
-      const [h, m] = manualStartTime.split(":").map(Number);
-      const start = new Date(2000, 0, 1, h, m);
-      const end = new Date(start.getTime() + mins * 60000);
-      const endStr = `${end.getHours().toString().padStart(2, "0")}:${end.getMinutes().toString().padStart(2, "0")}`;
-      setManualEndTime(endStr);
-    }, [manualStartTime, manualDuration]);
-
-    // When end time changes, update duration (unless it was set by duration input)
-    React.useEffect(() => {
-      if (!manualStartTime.match(/^\d{2}:\d{2}$/) || !manualEndTime.match(/^\d{2}:\d{2}$/)) return;
-      if (!endManuallyEdited) return;
-      const [sh, sm] = manualStartTime.split(":").map(Number);
-      const [eh, em] = manualEndTime.split(":").map(Number);
-      let mins = (eh - sh) * 60 + (em - sm);
-      if (mins < 0) mins += 24 * 60; // handle overnight
-      const hours = Math.floor(mins / 60);
-      const minutes = mins % 60;
-      // Always use hh:mm format, zero-padded
-      setManualDuration(`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`);
-    }, [manualEndTime]);
-  // Generate 15-minute increment options if not provided
+  // Use injected options if provided, else generate locally once
   const allHourOptions = React.useMemo(() => {
-    if (propHourOptions && Array.isArray(propHourOptions) && propHourOptions.length > 0) {
-      return propHourOptions;
-    }
-    const options: string[] = [];
-    for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        options.push(`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
-      }
-    }
-    return options;
+    if (propHourOptions && propHourOptions.length > 0) return propHourOptions;
+    return buildHourOptions();
   }, [propHourOptions]);
+
   const [showStartDropdown, setShowStartDropdown] = useState(false);
   const [showEndDropdown, setShowEndDropdown] = useState(false);
-  const startInputRef = useRef<HTMLInputElement>(null);
-  const endInputRef = useRef<HTMLInputElement>(null);
+  const startWrapRef = useRef<HTMLDivElement>(null);
+  const endWrapRef = useRef<HTMLDivElement>(null);
   const startDropdownRef = useRef<HTMLUListElement>(null);
   const endDropdownRef = useRef<HTMLUListElement>(null);
-  // Helper to get the closest time option to now (rounded down to nearest option)
+
+  useClickOutside(startWrapRef, () => setShowStartDropdown(false), showStartDropdown);
+  useClickOutside(endWrapRef, () => setShowEndDropdown(false), showEndDropdown);
+
+  // When start time or duration changes, update end time (unless end was manually edited)
+  React.useEffect(() => {
+    if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return;
+    if (!manualDuration || endManuallyEdited) return;
+    const mins = parseDuration(manualDuration);
+    if (mins == null) return;
+    const [h, m] = manualStartTime.split(":").map(Number);
+    const start = new Date(2000, 0, 1, h, m);
+    const end = new Date(start.getTime() + mins * 60000);
+    setManualEndTime(
+      `${end.getHours().toString().padStart(2, "0")}:${end.getMinutes().toString().padStart(2, "0")}`
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualStartTime, manualDuration, endManuallyEdited]);
+
+  // When end time is manually edited, recalculate duration
+  React.useEffect(() => {
+    if (!manualStartTime.match(/^\d{2}:\d{2}$/) || !manualEndTime.match(/^\d{2}:\d{2}$/)) return;
+    if (!endManuallyEdited) return;
+    const [sh, sm] = manualStartTime.split(":").map(Number);
+    const [eh, em] = manualEndTime.split(":").map(Number);
+    let mins = (eh - sh) * 60 + (em - sm);
+    if (mins < 0) mins += MINUTES_PER_DAY;
+    const hours = Math.floor(mins / 60).toString().padStart(2, "0");
+    const minutes = (mins % 60).toString().padStart(2, "0");
+    setManualDuration(`${hours}:${minutes}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualEndTime, manualStartTime, endManuallyEdited]);
+
   function getCurrentTimeOption(options: string[]) {
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, "0");
     const current = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    // Find the closest option <= current
-    let idx = options.findIndex(opt => opt >= current);
+    const idx = options.findIndex((opt) => opt >= current);
     if (idx === -1) return 0;
     if (options[idx] > current && idx > 0) return idx - 1;
     return idx;
   }
 
-  // Filtered options for end time
   const filteredEndOptions = allHourOptions.filter((value) => {
     if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return true;
     return value > manualStartTime;
   });
-
-  // Helper to handle click outside for dropdowns
-  React.useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        startInputRef.current &&
-        !startInputRef.current.contains(e.target as Node)
-      ) {
-        setShowStartDropdown(false);
-      }
-      if (
-        endInputRef.current &&
-        !endInputRef.current.contains(e.target as Node)
-      ) {
-        setShowEndDropdown(false);
-      }
-    }
-    if (showStartDropdown || showEndDropdown) {
-      document.addEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showStartDropdown, showEndDropdown]);
 
   // Scroll start dropdown to current time when opened
   React.useEffect(() => {
     if (showStartDropdown && startDropdownRef.current) {
       const idx = getCurrentTimeOption(allHourOptions);
       const item = startDropdownRef.current.children[idx] as HTMLElement | undefined;
-      if (item) {
-        startDropdownRef.current.scrollTop = item.offsetTop - 24; // 24px padding
-      }
+      if (item) startDropdownRef.current.scrollTop = item.offsetTop - 24;
     }
   }, [showStartDropdown, allHourOptions]);
 
@@ -159,9 +113,7 @@ export function ManualEntryForm({
     if (showEndDropdown && endDropdownRef.current) {
       const idx = getCurrentTimeOption(filteredEndOptions);
       const item = endDropdownRef.current.children[idx] as HTMLElement | undefined;
-      if (item) {
-        endDropdownRef.current.scrollTop = item.offsetTop - 24;
-      }
+      if (item) endDropdownRef.current.scrollTop = item.offsetTop - 24;
     }
   }, [showEndDropdown, filteredEndOptions]);
 
@@ -184,15 +136,7 @@ export function ManualEntryForm({
           </label>
           <DatePicker
             selected={manualDate ? new Date(manualDate + 'T00:00:00') : null}
-            onChange={(date: Date | null) => {
-              if (date) {
-                // Format as yyyy-MM-dd in local time
-                const year = date.getFullYear();
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const day = date.getDate().toString().padStart(2, '0');
-                setManualDate(`${year}-${month}-${day}`);
-              }
-            }}
+            onChange={(date: Date | null) => date && setManualDate(formatLocalDate(date))}
             dateFormat="yyyy-MM-dd"
             showWeekNumbers
             locale={sv}
@@ -214,12 +158,11 @@ export function ManualEntryForm({
           />
         </div>
         {/* Start time with custom dropdown */}
-        <div className="space-y-2 relative">
+        <div className="space-y-2 relative" ref={startWrapRef}>
           <label className="block text-xs font-medium text-zinc-300">
             Start time (24h)
           </label>
           <input
-            ref={startInputRef}
             type="text"
             inputMode="numeric"
             placeholder="09:00"
@@ -254,12 +197,11 @@ export function ManualEntryForm({
           )}
         </div>
         {/* End time and duration */}
-        <div className="space-y-2 relative">
+        <div className="space-y-2 relative" ref={endWrapRef}>
           <label className="block text-xs font-medium text-zinc-300">End time (24h) or duration</label>
           <div className="flex gap-2">
             <div className="relative w-1/2">
               <input
-                ref={endInputRef}
                 type="text"
                 inputMode="numeric"
                 placeholder="17:30"

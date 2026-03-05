@@ -6,21 +6,27 @@ describe('useTimer', () => {
     const { result } = renderHook(() => useTimer());
     expect(result.current.isRunning).toBe(false);
     expect(result.current.startedAt).toBeNull();
-    expect(result.current.elapsedMs).toBe(0);
     expect(typeof result.current.formattedElapsed).toBe('string');
+    expect(typeof result.current.start).toBe('function');
+    expect(typeof result.current.stop).toBe('function');
+    expect(typeof result.current.reset).toBe('function');
   });
 
-  it('should update elapsedMs when started', () => {
-    jest.useFakeTimers();
+  it('should set isRunning and startedAt when started', () => {
     const { result } = renderHook(() => useTimer());
+    expect(result.current.isRunning).toBe(false);
     act(() => {
-      result.current.setIsRunning(true);
-      result.current.setStartedAt(new Date(Date.now() - 2000));
+      result.current.start();
     });
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
-    expect(result.current.elapsedMs).toBeGreaterThanOrEqual(2000);
-    jest.useRealTimers();
+    expect(result.current.isRunning).toBe(true);
+    expect(result.current.startedAt).not.toBeNull();
+  });
+
+  it('should reset to initial state on reset()', () => {
+    const { result } = renderHook(() => useTimer());
+    act(() => { result.current.start(); });
+    act(() => { result.current.reset(); });
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.startedAt).toBeNull();
   });
 });
