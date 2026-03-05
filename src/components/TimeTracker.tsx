@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -11,7 +11,7 @@ import { RecentEntries } from "./RecentEntries";
 import { EditEntryModal } from "./EditEntryModal";
 import type { TimeEntry, Project } from "@/types";
 import { MAX_RECENT_ENTRIES, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
-import { buildHourOptions, formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
+import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields } from "@/lib/timeUtils";
 import type { Theme } from "@/hooks/useTheme";
 
 /**
@@ -19,18 +19,6 @@ import type { Theme } from "@/hooks/useTheme";
  * array or a single object depending on relationship cardinality — into flat
  * `project_name` / `project_color` strings.
  */
-function extractProjectFields(projects: unknown): {
-  project_name: string | null;
-  project_color: string | null;
-} {
-  if (Array.isArray(projects)) {
-    const p = projects[0] as { name?: string; color?: string } | undefined;
-    return { project_name: p?.name ?? null, project_color: p?.color ?? null };
-  }
-  const p = projects as { name?: string; color?: string } | null;
-  return { project_name: p?.name ?? null, project_color: p?.color ?? null };
-}
-
 export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   // ─── Get Supabase client ────────────────────────────────────────────────────
   // getSupabaseClient() returns a singleton — stable across renders.
@@ -170,7 +158,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     }
   };
 
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const handleCreateProject = async (e: FormEvent) => {
     e.preventDefault();
     const name = newProjectName.trim();
     if (!name) return;
@@ -197,7 +185,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     setCreatingProject(false);
   };
 
-  const handleManualSubmit = async (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 

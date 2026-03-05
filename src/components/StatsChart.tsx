@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 import { useStatsData } from "./useStatsData";
 import type { StatsView, StatsGroup, StatsEntry } from "./useStatsData";
-import { getISOWeek } from "@/lib/timeUtils";
+import { getISOWeek, extractProjectFields } from "@/lib/timeUtils";
 import { useTheme } from "@/hooks/useTheme";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
@@ -33,8 +33,8 @@ type Dataset = {
 
 /** Resolves the project name and colour for a fetched entry. */
 function getProjectMeta(entry: StatsEntry): { name: string; color: string } {
-  const p = Array.isArray(entry.projects) ? entry.projects[0] : entry.projects;
-  return { name: p?.name ?? "(none)", color: p?.color ?? "#34d399" };
+  const { project_name, project_color } = extractProjectFields(entry.projects);
+  return { name: project_name ?? "(none)", color: project_color ?? "#34d399" };
 }
 
 export default function StatsChart({ view, selectedDate, groupBy }: Props) {

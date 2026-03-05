@@ -1,4 +1,6 @@
-import React, { useRef, useState } from "react";
+"use client";
+
+import { useRef, useState, useMemo, useEffect, type FormEvent } from "react";
 import DatePicker from "react-datepicker";
 import { sv } from "date-fns/locale/sv";
 import "react-datepicker/dist/react-datepicker.css";
@@ -18,7 +20,7 @@ type ManualEntryFormProps = {
   manualDescription: string;
   setManualDescription: (v: string) => void;
   manualSaving: boolean;
-  handleManualSubmit: (e: React.FormEvent) => void;
+  handleManualSubmit: (e: FormEvent) => void;
   hourOptions?: string[];
 };
 
@@ -40,7 +42,7 @@ export function ManualEntryForm({
   const [endManuallyEdited, setEndManuallyEdited] = useState(false);
 
   // Use injected options if provided, else generate locally once
-  const allHourOptions = React.useMemo(() => {
+  const allHourOptions = useMemo(() => {
     if (propHourOptions && propHourOptions.length > 0) return propHourOptions;
     return buildHourOptions();
   }, [propHourOptions]);
@@ -56,7 +58,7 @@ export function ManualEntryForm({
   useClickOutside(endWrapRef, () => setShowEndDropdown(false), showEndDropdown);
 
   // When start time or duration changes, update end time (unless end was manually edited)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return;
     if (!manualDuration || endManuallyEdited) return;
     const mins = parseDuration(manualDuration);
@@ -71,7 +73,7 @@ export function ManualEntryForm({
   }, [manualStartTime, manualDuration, endManuallyEdited]);
 
   // When end time is manually edited, recalculate duration
-  React.useEffect(() => {
+  useEffect(() => {
     if (!manualStartTime.match(/^\d{2}:\d{2}$/) || !manualEndTime.match(/^\d{2}:\d{2}$/)) return;
     if (!endManuallyEdited) return;
     const [sh, sm] = manualStartTime.split(":").map(Number);
@@ -100,7 +102,7 @@ export function ManualEntryForm({
   });
 
   // Scroll start dropdown to current time when opened
-  React.useEffect(() => {
+  useEffect(() => {
     if (showStartDropdown && startDropdownRef.current) {
       const idx = getCurrentTimeOption(allHourOptions);
       const item = startDropdownRef.current.children[idx] as HTMLElement | undefined;
@@ -109,7 +111,7 @@ export function ManualEntryForm({
   }, [showStartDropdown, allHourOptions]);
 
   // Scroll end dropdown to current time when opened
-  React.useEffect(() => {
+  useEffect(() => {
     if (showEndDropdown && endDropdownRef.current) {
       const idx = getCurrentTimeOption(filteredEndOptions);
       const item = endDropdownRef.current.children[idx] as HTMLElement | undefined;

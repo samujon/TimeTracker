@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { sv } from "date-fns/locale/sv";

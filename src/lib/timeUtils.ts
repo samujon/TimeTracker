@@ -41,13 +41,19 @@ export function parseDuration(str: string): number | null {
 }
 
 /**
- * Formats a total-minutes value as zero-padded "hh:mm".
- * Handles durations >= 24 h by letting hours exceed 23.
+ * Normalises the `projects` join returned by Supabase.
+ * The join can be either a single object or an array depending on relationship cardinality.
  */
-export function formatHoursMinutes(totalMinutes: number): string {
-    const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
-    const minutes = (totalMinutes % 60).toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
+export function extractProjectFields(projects: unknown): {
+    project_name: string | null;
+    project_color: string | null;
+} {
+    if (Array.isArray(projects)) {
+        const p = projects[0] as { name?: string; color?: string } | undefined;
+        return { project_name: p?.name ?? null, project_color: p?.color ?? null };
+    }
+    const p = projects as { name?: string; color?: string } | null;
+    return { project_name: p?.name ?? null, project_color: p?.color ?? null };
 }
 
 /**
