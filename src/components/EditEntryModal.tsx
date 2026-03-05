@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import { sv } from "date-fns/locale/sv";
 import "react-datepicker/dist/react-datepicker.css";
+import type { Project } from "@/types";
+import { formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
 
 type EditEntryModalProps = {
   entry: {
@@ -11,29 +13,55 @@ type EditEntryModalProps = {
     started_at: string;
     ended_at: string | null;
   };
-  projects: { id: string; name: string; color?: string }[];
-  onSave: (update: { id: string; description: string; project_id: string; started_at: string; ended_at: string }) => void;
+  projects: Project[];
+  /** Async — the modal resets its `saving` state after the promise settles. */
+  onSave: (update: {
+    id: string;
+    description: string;
+    project_id: string;
+    started_at: string;
+    ended_at: string;
+  }) => Promise<void>;
   onClose: () => void;
 };
 
 export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryModalProps) {
-  const [description, setDescription] = useState(entry.description || "");
-  const [projectId, setProjectId] = useState(entry.project_id || (projects[0]?.id ?? ""));
-  const [date, setDate] = useState(entry.started_at ? entry.started_at.slice(0, 10) : "");
-  const [startTime, setStartTime] = useState(entry.started_at ? entry.started_at.slice(11, 16) : "");
-  const [endTime, setEndTime] = useState(entry.ended_at ? entry.ended_at.slice(11, 16) : "");
-  const [saving, setSaving] = useState(false);
+  // Parse ISO timestamps into local-time parts so the displayed values match
+  // what the user sees in their local timezone (e.g. CET/CEST for Swedish users).
+  const startDate = entry.started_at ? new Date(entry.started_at) : null;
+  const endDate = entry.ended_at ? new Date(entry.ended_at) : null;
 
-  function handleSubmit(e: React.FormEvent) {
+  const [description, setDescription] = useState(entry.description ?? "");
+  const [projectId, setProjectId] = useState(entry.project_id ?? "");
+  const [date, setDate] = useState(() => (startDate ? formatLocalDate(startDate) : ""));
+  const [startTime, setStartTime] = useState(() => (startDate ? formatLocalTime(startDate) : ""));
+  const [endTime, setEndTime] = useState(() => (endDate ? formatLocalTime(endDate) : ""));
+  const [saving, setSaving] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setValidationError(null);
+
+    if (!date || !startTime || !endTime) {
+      setValidationError("Date, start time and end time are all required.");
+      return;
+    }
+    if (endTime <= startTime) {
+      setValidationError("End time must be after start time.");
+      return;
+    }
+
+    // Construct local-datetime strings and convert to UTC ISO for storage.
+    const startedAt = new Date(`${date}T${startTime}:00`).toISOString();
+    const endedAt = new Date(`${date}T${endTime}:00`).toISOString();
+
     setSaving(true);
-    onSave({
-      id: entry.id,
-      description,
-      project_id: projectId,
-      started_at: `${date}T${startTime}`,
-      ended_at: `${date}T${endTime}`,
-    });
+    try {
+      await onSave({ id: entry.id, description, project_id: projectId, started_at: startedAt, ended_at: endedAt });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -45,22 +73,26 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
             <label className="block text-xs font-medium text-zinc-300 mb-1">Project</label>
             <select
               value={projectId}
-              onChange={e => setProjectId(e.target.value)}
+              onChange={(e) => setProjectId(e.target.value)}
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+              <option value="">— No project —</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1">Date</label>
             <DatePicker
-              selected={date ? new Date(date) : null}
-              onChange={d => d && setDate(d.toISOString().slice(0, 10))}
+              selected={date ? new Date(date + "T00:00:00") : null}
+              onChange={(d: Date | null) => d && setDate(formatLocalDate(d))}
               dateFormat="yyyy-MM-dd"
               locale={sv}
               calendarStartDay={1}
+              showWeekNumbers
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               popperClassName="z-50"
             />
@@ -71,7 +103,7 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
               <input
                 type="time"
                 value={startTime}
-                onChange={e => setStartTime(e.target.value)}
+                onChange={(e) => setStartTime(e.target.value)}
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
@@ -80,7 +112,7 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
               <input
                 type="time"
                 value={endTime}
-                onChange={e => setEndTime(e.target.value)}
+                onChange={(e) => setEndTime(e.target.value)}
                 className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
@@ -90,25 +122,28 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
             <input
               type="text"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
+          {validationError && (
+            <p className="text-xs text-rose-400">{validationError}</p>
+          )}
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full bg-zinc-700 text-zinc-200 text-xs font-medium hover:bg-zinc-600"
               disabled={saving}
+              className="px-4 py-2 rounded-full bg-zinc-700 text-zinc-200 text-xs font-medium hover:bg-zinc-600 disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-full bg-emerald-500 text-zinc-950 text-xs font-medium hover:bg-emerald-400 disabled:opacity-60"
               disabled={saving}
+              className="px-4 py-2 rounded-full bg-emerald-500 text-zinc-950 text-xs font-medium hover:bg-emerald-400 disabled:opacity-60"
             >
-              Save
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         </form>
@@ -116,3 +151,4 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
     </div>
   );
 }
+
