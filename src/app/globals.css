@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -24,4 +27,11 @@ body {
   color: var(--foreground);
   /* Use the Geist font wired up in layout.tsx via CSS variable */
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Smooth light/dark mode transitions */
+*,
+*::before,
+*::after {
+  transition: color 300ms ease, background-color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
 }

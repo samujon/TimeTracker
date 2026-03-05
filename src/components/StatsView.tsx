@@ -28,7 +28,7 @@ export function StatsView() {
                     <button
                         key={v}
                         onClick={() => setView(v)}
-                        className={`px-4 py-2 rounded capitalize ${view === v ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-100"
+                        className={`px-4 py-2 rounded capitalize ${view === v ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                             }`}
                     >
                         {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -41,14 +41,14 @@ export function StatsView() {
             {/* Group-by toggle */}
             <div className="flex gap-2">
                 <button
-                    className={`px-3 py-1 rounded ${groupBy === "period" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-100"
+                    className={`px-3 py-1 rounded ${groupBy === "period" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                         }`}
                     onClick={() => setGroupBy("period")}
                 >
                     Split by {view === "daily" ? "hour" : view === "weekly" ? "day" : "week"}
                 </button>
                 <button
-                    className={`px-3 py-1 rounded ${groupBy === "task" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-100"
+                    className={`px-3 py-1 rounded ${groupBy === "task" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                         }`}
                     onClick={() => setGroupBy("task")}
                 >
@@ -57,7 +57,7 @@ export function StatsView() {
             </div>
 
             {/* Chart */}
-            <div className="h-80 flex items-center justify-center border border-zinc-800 rounded-xl bg-zinc-900/70">
+            <div className="h-80 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/70">
                 <StatsChart view={view} selectedDate={selectedDate} groupBy={groupBy} />
             </div>
         </div>
