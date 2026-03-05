@@ -13,7 +13,8 @@ import {
 } from "chart.js";
 import { useStatsData } from "./useStatsData";
 import type { StatsView, StatsGroup, StatsEntry } from "./useStatsData";
-import { getISOWeek } from "@/lib/timeUtils";
+import { getISOWeek, extractProjectFields } from "@/lib/timeUtils";
+import { useTheme } from "@/hooks/useTheme";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
 
@@ -32,12 +33,16 @@ type Dataset = {
 
 /** Resolves the project name and colour for a fetched entry. */
 function getProjectMeta(entry: StatsEntry): { name: string; color: string } {
-  const p = Array.isArray(entry.projects) ? entry.projects[0] : entry.projects;
-  return { name: p?.name ?? "(none)", color: p?.color ?? "#34d399" };
+  const { project_name, project_color } = extractProjectFields(entry.projects);
+  return { name: project_name ?? "(none)", color: project_color ?? "#34d399" };
 }
 
 export default function StatsChart({ view, selectedDate, groupBy }: Props) {
   const { loading, data, error } = useStatsData(view, selectedDate, groupBy);
+  const { theme } = useTheme();
+
+  const tickColor = theme === "dark" ? "#a1a1aa" : "#52525b";
+  const gridColor = theme === "dark" ? "#27272a" : "#e4e4e7";
 
   const { labels, datasets } = useMemo(() => {
     // Build a map of all unique projects in the returned data.
@@ -156,14 +161,14 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { color: "#a1a1aa" },
-        grid: { color: "#27272a" },
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
         stacked: groupBy === "period",
-        title: { display: true, text: "Minutes", color: "#a1a1aa" },
+        title: { display: true, text: "Minutes", color: tickColor },
       },
       x: {
-        ticks: { color: "#a1a1aa" },
-        grid: { color: "#27272a" },
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
         stacked: groupBy === "period",
       },
     },

@@ -1,4 +1,6 @@
-import React, { useRef, useState } from "react";
+"use client";
+
+import { useRef, useState, useMemo, useEffect, type FormEvent } from "react";
 import DatePicker from "react-datepicker";
 import { sv } from "date-fns/locale/sv";
 import "react-datepicker/dist/react-datepicker.css";
@@ -18,7 +20,7 @@ type ManualEntryFormProps = {
   manualDescription: string;
   setManualDescription: (v: string) => void;
   manualSaving: boolean;
-  handleManualSubmit: (e: React.FormEvent) => void;
+  handleManualSubmit: (e: FormEvent) => void;
   hourOptions?: string[];
 };
 
@@ -40,7 +42,7 @@ export function ManualEntryForm({
   const [endManuallyEdited, setEndManuallyEdited] = useState(false);
 
   // Use injected options if provided, else generate locally once
-  const allHourOptions = React.useMemo(() => {
+  const allHourOptions = useMemo(() => {
     if (propHourOptions && propHourOptions.length > 0) return propHourOptions;
     return buildHourOptions();
   }, [propHourOptions]);
@@ -56,7 +58,7 @@ export function ManualEntryForm({
   useClickOutside(endWrapRef, () => setShowEndDropdown(false), showEndDropdown);
 
   // When start time or duration changes, update end time (unless end was manually edited)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!manualStartTime.match(/^\d{2}:\d{2}$/)) return;
     if (!manualDuration || endManuallyEdited) return;
     const mins = parseDuration(manualDuration);
@@ -71,7 +73,7 @@ export function ManualEntryForm({
   }, [manualStartTime, manualDuration, endManuallyEdited]);
 
   // When end time is manually edited, recalculate duration
-  React.useEffect(() => {
+  useEffect(() => {
     if (!manualStartTime.match(/^\d{2}:\d{2}$/) || !manualEndTime.match(/^\d{2}:\d{2}$/)) return;
     if (!endManuallyEdited) return;
     const [sh, sm] = manualStartTime.split(":").map(Number);
@@ -100,7 +102,7 @@ export function ManualEntryForm({
   });
 
   // Scroll start dropdown to current time when opened
-  React.useEffect(() => {
+  useEffect(() => {
     if (showStartDropdown && startDropdownRef.current) {
       const idx = getCurrentTimeOption(allHourOptions);
       const item = startDropdownRef.current.children[idx] as HTMLElement | undefined;
@@ -109,7 +111,7 @@ export function ManualEntryForm({
   }, [showStartDropdown, allHourOptions]);
 
   // Scroll end dropdown to current time when opened
-  React.useEffect(() => {
+  useEffect(() => {
     if (showEndDropdown && endDropdownRef.current) {
       const idx = getCurrentTimeOption(filteredEndOptions);
       const item = endDropdownRef.current.children[idx] as HTMLElement | undefined;
@@ -118,10 +120,10 @@ export function ManualEntryForm({
   }, [showEndDropdown, filteredEndOptions]);
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
+    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-6">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-medium text-zinc-200">Add manual entry</h2>
-        <span className="text-[11px] text-zinc-500">
+        <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Add manual entry</h2>
+        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
           For past days or specific times
         </span>
       </div>
@@ -131,7 +133,7 @@ export function ManualEntryForm({
         autoComplete="off"
       >
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-zinc-300">
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Date
           </label>
           <DatePicker
@@ -141,12 +143,12 @@ export function ManualEntryForm({
             showWeekNumbers
             locale={sv}
             calendarStartDay={1}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             popperClassName="z-50"
           />
         </div>
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-zinc-300">
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Description (optional)
           </label>
           <input
@@ -154,12 +156,12 @@ export function ManualEntryForm({
             value={manualDescription}
             onChange={(e) => setManualDescription(e.target.value)}
             placeholder="What did you work on?"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
         </div>
         {/* Start time with custom dropdown */}
         <div className="space-y-2 relative" ref={startWrapRef}>
-          <label className="block text-xs font-medium text-zinc-300">
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Start time (24h)
           </label>
           <input
@@ -173,18 +175,18 @@ export function ManualEntryForm({
               setShowStartDropdown(true);
             }}
             autoComplete="off"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
           {showStartDropdown && (
             <ul
               ref={startDropdownRef}
-              className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-800 bg-zinc-900 shadow-lg"
+              className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg"
               style={{ top: '100%' }}
             >
               {allHourOptions.map((value) => (
                 <li
                   key={value}
-                  className="cursor-pointer px-3 py-2 text-sm text-zinc-100 hover:bg-emerald-600/20"
+                  className="cursor-pointer px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-emerald-600/20"
                   onMouseDown={() => {
                     setManualStartTime(value);
                     setShowStartDropdown(false);
@@ -198,7 +200,7 @@ export function ManualEntryForm({
         </div>
         {/* End time and duration */}
         <div className="space-y-2 relative" ref={endWrapRef}>
-          <label className="block text-xs font-medium text-zinc-300">End time (24h) or duration</label>
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">End time (24h) or duration</label>
           <div className="flex gap-2">
             <div className="relative w-1/2">
               <input
@@ -213,18 +215,18 @@ export function ManualEntryForm({
                   setEndManuallyEdited(true);
                 }}
                 autoComplete="off"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
               {showEndDropdown && (
                 <ul
                   ref={endDropdownRef}
-                  className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-800 bg-zinc-900 shadow-lg"
+                  className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg"
                   style={{ top: '100%' }}
                 >
                   {filteredEndOptions.map((value) => (
                     <li
                       key={value}
-                      className="cursor-pointer px-3 py-2 text-sm text-zinc-100 hover:bg-emerald-600/20"
+                      className="cursor-pointer px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-emerald-600/20"
                       onMouseDown={() => {
                         setManualEndTime(value);
                         setShowEndDropdown(false);
@@ -257,9 +259,9 @@ export function ManualEntryForm({
                     setManualDuration(`${hours}:${mins}`);
                   }
                 }}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
-              <span className="block text-xs text-zinc-500 mt-1">Duration (e.g. 1h 15m, 1:5, 01:30, 1:30; auto-formats to hh:mm)</span>
+              <span className="block text-xs text-zinc-400 dark:text-zinc-500 mt-1">Duration (e.g. 1h 15m, 1:5, 01:30, 1:30; auto-formats to hh:mm)</span>
             </div>
           </div>
         </div>

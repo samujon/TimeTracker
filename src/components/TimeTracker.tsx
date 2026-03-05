@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -11,26 +11,15 @@ import { RecentEntries } from "./RecentEntries";
 import { EditEntryModal } from "./EditEntryModal";
 import type { TimeEntry, Project } from "@/types";
 import { MAX_RECENT_ENTRIES, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
-import { buildHourOptions, formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
+import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields } from "@/lib/timeUtils";
+import type { Theme } from "@/hooks/useTheme";
 
 /**
  * Normalises the `projects` join returned by Supabase — which can be either an
  * array or a single object depending on relationship cardinality — into flat
  * `project_name` / `project_color` strings.
  */
-function extractProjectFields(projects: unknown): {
-  project_name: string | null;
-  project_color: string | null;
-} {
-  if (Array.isArray(projects)) {
-    const p = projects[0] as { name?: string; color?: string } | undefined;
-    return { project_name: p?.name ?? null, project_color: p?.color ?? null };
-  }
-  const p = projects as { name?: string; color?: string } | null;
-  return { project_name: p?.name ?? null, project_color: p?.color ?? null };
-}
-
-export function TimeTracker() {
+export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   // ─── Get Supabase client ────────────────────────────────────────────────────
   // getSupabaseClient() returns a singleton — stable across renders.
   const supabase = getSupabaseClient();
@@ -169,7 +158,7 @@ export function TimeTracker() {
     }
   };
 
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const handleCreateProject = async (e: FormEvent) => {
     e.preventDefault();
     const name = newProjectName.trim();
     if (!name) return;
@@ -189,14 +178,14 @@ export function TimeTracker() {
       const project = data as Project;
       setProjects((prev) => [...prev, project]);
       setSelectedProjectId(project.id);
-      setNewProjectName("");
+      setNewProjectName(project.name);
       setNewProjectColor(DEFAULT_PROJECT_COLOR);
     }
 
     setCreatingProject(false);
   };
 
-  const handleManualSubmit = async (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -363,15 +352,20 @@ export function TimeTracker() {
       <header className="flex items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Time Tracker</h1>
-          <p className="mt-1 text-xs text-zinc-400">Minimal, self-hosted tracking powered by Supabase.</p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Minimal, self-hosted tracking powered by Supabase.</p>
         </div>
-        <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-400">
-          Dark mode · Local Supabase
-        </span>
+        <button
+          onClick={toggleTheme}
+          className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          aria-label={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+          title={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+        >
+          {theme === 'dark' ? '🌙 Dark mode' : '☀ Light mode'}
+        </button>
       </header>
 
       {loading ? (
-        <div className="text-zinc-500 text-sm py-8 text-center">Loading…</div>
+        <div className="text-zinc-500 dark:text-zinc-400 text-sm py-8 text-center">Loading…</div>
       ) : (
         <>
           <ProjectSelector
@@ -388,11 +382,11 @@ export function TimeTracker() {
             onUpdateProjectColor={handleUpdateProjectColor}
           />
 
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 mt-8">
+          <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-6 mt-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-4xl font-mono tabular-nums sm:text-5xl">{formattedElapsed}</div>
-                <p className="mt-2 text-xs text-zinc-400">
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
                   {isRunning ? "Timer is running…" : "Timer is stopped."}
                 </p>
               </div>
@@ -400,7 +394,7 @@ export function TimeTracker() {
                 type="button"
                 onClick={handleToggle}
                 disabled={saving}
-                className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium shadow-lg shadow-black/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${isRunning
+                className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium shadow-lg shadow-black/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900 ${isRunning
                   ? "bg-rose-500 text-white hover:bg-rose-400"
                   : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
                   } ${saving ? "opacity-70" : ""}`}
@@ -409,13 +403,13 @@ export function TimeTracker() {
               </button>
             </div>
             <div className="mt-6">
-              <label className="block text-xs font-medium text-zinc-300">Description (optional)</label>
+              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Description (optional)</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What are you working on?"
-                className="mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-2 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             {error && <p className="mt-4 text-xs text-rose-400">{error}</p>}

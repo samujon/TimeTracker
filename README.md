@@ -105,6 +105,9 @@ Fill in the date, start time, and end time (or a duration like `1:30` or `90m`) 
 ### Statistics
 Navigate to the **Stats** page to view charts of your tracked time. Use the view toggle (Daily / Weekly / Monthly) and the **Split by period / task** toggle to explore your data.
 
+### Theme switcher
+Toggle between dark mode or light mode
+
 ---
 
 ## 8. Data storage

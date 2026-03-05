@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { ClipboardDocumentIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { TimeEntry } from "@/types";
@@ -25,18 +27,18 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-medium text-zinc-200">Recent entries</h2>
-        <span className="text-[11px] uppercase tracking-wide text-zinc-500">
+        <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Recent entries</h2>
+        <span className="text-[11px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
           Last 10
         </span>
       </div>
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
         {entries.length === 0 ? (
-          <div className="px-4 py-6 text-xs text-zinc-500">
+          <div className="px-4 py-6 text-xs text-zinc-400 dark:text-zinc-500">
             No entries yet. Start the timer to create your first one.
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-800 text-xs">
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
             {entries.map((entry) => {
               const started = new Date(entry.started_at);
               const ended = entry.ended_at ? new Date(entry.ended_at) : null;
@@ -66,21 +68,21 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
                     <div className="flex items-center gap-2">
                       {entry.project_color && (
                         <span
-                          className="inline-block h-3 w-3 rounded-full border border-zinc-700"
+                          className="inline-block h-3 w-3 rounded-full border border-zinc-300 dark:border-zinc-700"
                           style={{ backgroundColor: entry.project_color }}
                           title="Project color"
                         />
                       )}
-                      <p className="truncate text-zinc-100 font-medium">
+                      <p className="truncate text-zinc-900 dark:text-zinc-100 font-medium">
                         {entry.project_name || "Untitled task"}
                       </p>
                     </div>
                     {entry.description?.trim() && (
-                      <p className="truncate text-zinc-400 text-xs mt-0.5">
+                      <p className="truncate text-zinc-500 dark:text-zinc-400 text-xs mt-0.5">
                         {entry.description}
                       </p>
                     )}
-                    <p className="mt-1 text-[11px] text-zinc-500">
+                    <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
                       {started.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
                       {ended && (
                         <>
@@ -91,7 +93,7 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="shrink-0 rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 font-mono text-[11px] tabular-nums text-zinc-200">
+                    <span className="shrink-0 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1 font-mono text-[11px] tabular-nums text-zinc-700 dark:text-zinc-200">
                       {hours}:{minutes}:{seconds}
                     </span>
                     {onCopyToManual && (
@@ -138,12 +140,12 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
       {/* Delete confirmation dialog */}
       {pendingDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-700 shadow-xl text-center space-y-4">
-            <p className="text-sm text-zinc-100">Delete this entry? This cannot be undone.</p>
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-200 dark:border-zinc-700 shadow-xl text-center space-y-4">
+            <p className="text-sm text-zinc-900 dark:text-zinc-100">Delete this entry? This cannot be undone.</p>
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => setPendingDeleteId(null)}
-                className="px-4 py-2 rounded-full bg-zinc-700 text-zinc-200 text-xs font-medium hover:bg-zinc-600"
+                className="px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium hover:bg-zinc-200 dark:hover:bg-zinc-600"
               >
                 Cancel
               </button>

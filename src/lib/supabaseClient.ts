@@ -7,11 +7,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey);
 
-let supabase: SupabaseClient | null = null;
-
-if (hasSupabaseEnv) {
-  supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
-}
+const supabase: SupabaseClient | null = hasSupabaseEnv
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string)
+  : null;
 
 export function getSupabaseClient(): SupabaseClient | null {
   return supabase;
