@@ -54,7 +54,7 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
     if (groupBy === "period") {
       if (view === "weekly") {
         // ISO week: Monday (index 0) … Sunday (index 6)
-        labels = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
+        labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         datasets = allProjectIds.map((pid) => {
           const dayTotals = Array<number>(7).fill(0);
           data.forEach((entry) => {
@@ -85,7 +85,7 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
           weekSet.add(getISOWeek(d));
         }
         const weekNumbers = Array.from(weekSet).sort((a, b) => a - b);
-        labels = weekNumbers.map((w) => `v. ${w}`);
+        labels = weekNumbers.map((w) => `W${w}`);
 
         datasets = allProjectIds.map((pid) => {
           const weekTotals: Record<number, number> = {};
@@ -135,7 +135,7 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
       labels = allProjectIds.map((pid) => projectMap[pid].name);
       datasets = [
         {
-          label: "Minuter spårade",
+          label: "Minutes tracked",
           data: allProjectIds.map((pid) => Math.round(projectTotals[pid] / 60)),
           backgroundColor: allProjectIds.map((pid) => projectMap[pid].color),
         },
@@ -159,7 +159,7 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
         ticks: { color: "#a1a1aa" },
         grid: { color: "#27272a" },
         stacked: groupBy === "period",
-        title: { display: true, text: "Minuter", color: "#a1a1aa" },
+        title: { display: true, text: "Minutes", color: "#a1a1aa" },
       },
       x: {
         ticks: { color: "#a1a1aa" },
@@ -169,9 +169,9 @@ export default function StatsChart({ view, selectedDate, groupBy }: Props) {
     },
   };
 
-  if (loading) return <div className="text-zinc-400 text-sm">Laddar…</div>;
+  if (loading) return <div className="text-zinc-400 text-sm">Loading…</div>;
   if (error) return <div className="text-rose-400 text-sm">{error}</div>;
-  if (!labels.length) return <div className="text-zinc-500 text-sm">Ingen data för denna period.</div>;
+  if (!labels.length) return <div className="text-zinc-500 text-sm">No data for this period.</div>;
 
   return <Bar data={chartData} options={options} />;
 }

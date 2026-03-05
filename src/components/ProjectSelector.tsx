@@ -16,6 +16,7 @@ type ProjectSelectorProps = {
   creatingProject: boolean;
   handleCreateProject: (e: React.FormEvent) => void;
   onDeleteProject: (id: string) => void;
+  onUpdateProjectColor: (id: string, color: string) => Promise<void>;
 };
 
 export function ProjectSelector({
@@ -29,16 +30,20 @@ export function ProjectSelector({
   creatingProject,
   handleCreateProject,
   onDeleteProject,
+  onUpdateProjectColor,
 }: ProjectSelectorProps) {
   const [tab, setTab] = useState<"main" | "delete">("main");
   const [showColorPopover, setShowColorPopover] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editColorProjectId, setEditColorProjectId] = useState<string | null>(null);
   const colorPopoverRef = useRef<HTMLDivElement | null>(null);
+  const editColorPopoverRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLDivElement | null>(null);
 
   // Close colour popover on outside click
   useClickOutside(colorPopoverRef, () => setShowColorPopover(false), showColorPopover);
-
+  // Close edit-colour popover on outside click
+  useClickOutside(editColorPopoverRef, () => setEditColorProjectId(null), editColorProjectId !== null);
   // Close project dropdown on outside click
   useClickOutside(inputRef, () => setDropdownOpen(false), dropdownOpen);
 
@@ -178,14 +183,54 @@ export function ProjectSelector({
                 Add
               </button>
             )}
-            {/* Show color dot if selecting existing task */}
-            {projects.find(p => p.name === newProjectName) && (
-              <span
-                className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 ml-2"
-                style={{ backgroundColor: (projects.find(p => p.name === newProjectName)?.color || DEFAULT_PROJECT_COLOR) }}
-                title="Task color"
-              />
-            )}
+            {/* Show color dot if selecting existing task — clickable to edit color */}
+            {projects.find(p => p.name === newProjectName) && (() => {
+              const proj = projects.find(p => p.name === newProjectName)!;
+              return (
+                <div className="relative flex-shrink-0" ref={editColorPopoverRef}>
+                  <button
+                    type="button"
+                    className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                    style={{ backgroundColor: proj.color || DEFAULT_PROJECT_COLOR }}
+                    title="Edit task color"
+                    aria-label="Edit task color"
+                    onMouseDown={e => {
+                      e.preventDefault();
+                      setEditColorProjectId(editColorProjectId === proj.id ? null : proj.id);
+                    }}
+                  />
+                  {editColorProjectId === proj.id && (
+                    <div
+                      className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-700 bg-zinc-900 shadow-lg flex flex-col items-center"
+                      style={{ minWidth: 180 }}
+                      onMouseDown={e => e.preventDefault()}
+                    >
+                      <p className="text-[11px] text-zinc-400 mb-2">Edit task color</p>
+                      <div className="flex flex-wrap gap-1 mb-2 justify-center">
+                        {PROJECT_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className={`w-6 h-6 rounded-full border-2 transition-transform ${(proj.color || DEFAULT_PROJECT_COLOR) === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-700"}`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => { onUpdateProjectColor(proj.id, color); setEditColorProjectId(null); }}
+                            aria-label={`Set color ${color}`}
+                          />
+                        ))}
+                      </div>
+                      <input
+                        type="color"
+                        defaultValue={proj.color || DEFAULT_PROJECT_COLOR}
+                        onChange={(e) => onUpdateProjectColor(proj.id, e.target.value)}
+                        className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 cursor-pointer"
+                        title="Pick a custom color"
+                        style={{ minWidth: 32 }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           {/* Removed duplicate color picker below input */}
           {/* Removed duplicate Add button below input row */}
@@ -197,11 +242,46 @@ export function ProjectSelector({
           {projects.map((project) => (
             <li key={project.id} className="flex items-center justify-between py-1">
               <div className="flex items-center gap-2">
-                <span
-                  className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700"
-                  style={{ backgroundColor: project.color || '#34d399' }}
-                  title="Task color"
-                />
+                <div className="relative" ref={editColorProjectId === project.id ? editColorPopoverRef : null}>
+                  <button
+                    type="button"
+                    className="inline-block w-5 h-5 rounded-full border-2 border-zinc-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                    style={{ backgroundColor: project.color || '#34d399' }}
+                    title="Edit task color"
+                    aria-label="Edit task color"
+                    onClick={() => {
+                      setEditColorProjectId(editColorProjectId === project.id ? null : project.id);
+                    }}
+                  />
+                  {editColorProjectId === project.id && (
+                    <div
+                      className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-700 bg-zinc-900 shadow-lg flex flex-col items-center"
+                      style={{ minWidth: 180 }}
+                    >
+                      <p className="text-[11px] text-zinc-400 mb-2">Edit task color</p>
+                      <div className="flex flex-wrap gap-1 mb-2 justify-center">
+                        {PROJECT_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className={`w-6 h-6 rounded-full border-2 transition-transform ${(project.color || DEFAULT_PROJECT_COLOR) === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-700"}`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => { onUpdateProjectColor(project.id, color); setEditColorProjectId(null); }}
+                            aria-label={`Set color ${color}`}
+                          />
+                        ))}
+                      </div>
+                      <input
+                        type="color"
+                        defaultValue={project.color || DEFAULT_PROJECT_COLOR}
+                        onChange={(e) => onUpdateProjectColor(project.id, e.target.value)}
+                        className="w-8 h-8 rounded-full border-2 border-zinc-700 bg-zinc-900 cursor-pointer"
+                        title="Pick a custom color"
+                        style={{ minWidth: 32 }}
+                      />
+                    </div>
+                  )}
+                </div>
                 <span className="text-sm text-zinc-100">{project.name}</span>
               </div>
               <button

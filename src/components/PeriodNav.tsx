@@ -29,7 +29,7 @@ export function PeriodNav({
       const end = endOfISOWeek(date);
       const week = getISOWeek(date);
       const year = getISOWeekYear(date);
-      return `v. ${week} ${year} (${start.toLocaleDateString("sv-SE")} – ${end.toLocaleDateString("sv-SE")})`;
+      return `W${week} ${year} (${start.toLocaleDateString("sv-SE")} – ${end.toLocaleDateString("sv-SE")})`;
     }
     if (view === "monthly") return date.toLocaleString("sv-SE", { month: "long", year: "numeric" });
     return "";

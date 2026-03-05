@@ -317,6 +317,19 @@ export function TimeTracker() {
     }
   };
 
+  const handleUpdateProjectColor = async (id: string, color: string) => {
+    setError(null);
+    const { error: err } = await supabase.from("projects").update({ color }).eq("id", id);
+    if (err) {
+      setError(err.message);
+    } else {
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, color } : p)));
+      setEntries((prev) =>
+        prev.map((e) => (e.project_id === id ? { ...e, project_color: color } : e))
+      );
+    }
+  };
+
   const handleCopyToManual = (entry: TimeEntry) => {
     const started = entry.started_at ? new Date(entry.started_at) : null;
     const ended = entry.ended_at ? new Date(entry.ended_at) : null;
@@ -372,6 +385,7 @@ export function TimeTracker() {
             creatingProject={creatingProject}
             handleCreateProject={handleCreateProject}
             onDeleteProject={handleDeleteProject}
+            onUpdateProjectColor={handleUpdateProjectColor}
           />
 
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 mt-8">
