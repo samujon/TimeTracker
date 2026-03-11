@@ -1,5 +1,11 @@
 /** Shared domain types used throughout the application. */
 
+export type Tag = {
+    id: string;
+    name: string;
+    color?: string | null;
+};
+
 export type TimeEntry = {
     id: string;
     description: string | null;
@@ -9,12 +15,16 @@ export type TimeEntry = {
     started_at: string;
     ended_at: string | null;
     duration_seconds: number | null;
+    /** Entry-specific tags (not including project-inherited tags). */
+    entry_tags?: Tag[];
 };
 
 export type Project = {
     id: string;
     name: string;
-    color?: string;
+    color?: string | null;
+    /** Tags assigned to this project — inherited by all its entries. */
+    tags?: Tag[];
 };
 
 /** A single row produced for CSV export. */

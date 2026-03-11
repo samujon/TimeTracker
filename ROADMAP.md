@@ -2,10 +2,11 @@
 
 ## Short term
 
-- [ ] **Tags/categories** on entries (beyond just project name) for finer reporting
+- [x] **Tags/categories** on entries (beyond just project name) for finer reporting — multi-tag, colored; project-level tags inherited by entries; entry-specific tags additive; stats filter by tag (OR)
 - [x] **Running timer indicator** in the browser tab title (e.g. `⏱ 01:23 – My Task`)
 - [x] **Keyboard shortcuts** — start/stop timer, switch tabs
 - [x] **Export** — download entries as CSV for the current period
+- [ ] **Editor tab** — additional tab to allow manual editing of all existing entries
 - [ ] **Entry notes** — free-text field on each entry beyond just task name
 
 ## Mid term

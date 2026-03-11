@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import { ClipboardDocumentIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
-import type { TimeEntry } from "@/types";
+import type { TimeEntry, Project } from "@/types";
+import { computeEffectiveTags } from "@/lib/timeUtils";
+import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 
 type RecentEntriesProps = {
   entries: TimeEntry[];
+  projects: Project[];
   onDeleteEntry?: (id: string) => void;
   onEditEntry?: (entry: TimeEntry) => void;
   onCopyToManual?: (entry: TimeEntry) => void;
 };
 
-export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToManual }: RecentEntriesProps) {
+export function RecentEntries({ entries, projects, onDeleteEntry, onEditEntry, onCopyToManual }: RecentEntriesProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   function handleDeleteClick(id: string) {
@@ -59,6 +62,10 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
                   ? (duration % 60).toString().padStart(2, "0")
                   : "--";
 
+              const project = projects.find((p) => p.id === entry.project_id);
+              const effectiveTags = computeEffectiveTags(entry, project);
+              const inheritedTagIds = new Set((project?.tags ?? []).map((t) => t.id));
+
               return (
                 <li
                   key={entry.id}
@@ -81,6 +88,23 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
                       <p className="truncate text-zinc-500 dark:text-zinc-400 text-xs mt-0.5">
                         {entry.description}
                       </p>
+                    )}
+                    {effectiveTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {effectiveTags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-zinc-950"
+                            style={{
+                              backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR,
+                              opacity: inheritedTagIds.has(tag.id) ? 0.75 : 1,
+                            }}
+                            title={inheritedTagIds.has(tag.id) ? "Inherited from project" : "Entry tag"}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
                     )}
                     <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
                       {started.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}

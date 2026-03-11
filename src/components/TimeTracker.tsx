@@ -7,19 +7,15 @@ import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
 import { ProjectSelector } from "./ProjectSelector";
+import { TagSelector } from "./TagSelector";
 import { ManualEntryForm } from "./ManualEntryForm";
 import { RecentEntries } from "./RecentEntries";
 import { EditEntryModal } from "./EditEntryModal";
-import type { TimeEntry, Project } from "@/types";
+import type { TimeEntry, Project, Tag } from "@/types";
 import { MAX_RECENT_ENTRIES, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
-import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields } from "@/lib/timeUtils";
+import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields, extractTagsFromJoin, toggleArrayId } from "@/lib/timeUtils";
 import type { Theme } from "@/hooks/useTheme";
 
-/**
- * Normalises the `projects` join returned by Supabase — which can be either an
- * array or a single object depending on relationship cardinality — into flat
- * `project_name` / `project_color` strings.
- */
 export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   // ─── Get Supabase client ────────────────────────────────────────────────────
   // getSupabaseClient() returns a singleton — stable across renders.
@@ -52,13 +48,22 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
   const [newProjectColor, setNewProjectColor] = useState(DEFAULT_PROJECT_COLOR);
   const [creatingProject, setCreatingProject] = useState(false);
 
+  // Tag state
+  const [tags, setTags] = useState<Tag[]>([]);
+  /** Entry-specific tags selected for the current timer / manual entry session. */
+  const [selectedEntryTagIds, setSelectedEntryTagIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (!supabase) return;
 
     const loadEntries = async () => {
       const { data, error: err } = await supabase
         .from("time_entries")
-        .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
+        .select(
+          "id, description, project_id, started_at, ended_at, duration_seconds, " +
+          "projects(name, color), " +
+          "entry_tags(tags(id, name, color))"
+        )
         .order("started_at", { ascending: false })
         .limit(MAX_RECENT_ENTRIES);
 
@@ -66,9 +71,10 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         setError(err.message);
       } else {
         setEntries(
-          (data ?? []).map((entry: Record<string, unknown>) => ({
-            ...(entry as Omit<TimeEntry, "project_name" | "project_color">),
+          ((data ?? []) as unknown as Record<string, unknown>[]).map((entry) => ({
+            ...(entry as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
             ...extractProjectFields(entry.projects),
+            entry_tags: extractTagsFromJoin(entry.entry_tags),
           }))
         );
       }
@@ -80,21 +86,39 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
   useEffect(() => {
     if (!supabase) return;
 
-    const loadProjects = async () => {
-      const { data, error: err } = await supabase
-        .from("projects")
-        .select("id, name, color")
-        .order("created_at", { ascending: true });
+    const loadProjectsAndTags = async () => {
+      const [projectsResult, tagsResult] = await Promise.all([
+        supabase
+          .from("projects")
+          .select("id, name, color, project_tags(tags(id, name, color))")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("tags")
+          .select("id, name, color")
+          .order("created_at", { ascending: true }),
+      ]);
 
-      if (err) {
-        setError(err.message);
+      if (projectsResult.error) {
+        setError(projectsResult.error.message);
       } else {
-        setProjects((data as Project[]) ?? []);
+        setProjects(
+          ((projectsResult.data ?? []) as unknown as Record<string, unknown>[]).map((p) => ({
+            ...(p as unknown as Omit<Project, "tags">),
+            tags: extractTagsFromJoin(p.project_tags),
+          }))
+        );
       }
+
+      if (tagsResult.error) {
+        setError(tagsResult.error.message);
+      } else {
+        setTags(((tagsResult.data ?? []) as unknown as Tag[]));
+      }
+
       setLoading(false);
     };
 
-    void loadProjects();
+    void loadProjectsAndTags();
   }, [supabase]);
 
   // ─── Browser tab title ───────────────────────────────────────────────────────
@@ -131,6 +155,24 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     return <SetupScreen />;
   }
 
+  // ─── Local helpers (defined after conditional return so supabase is non-null) ─
+
+  /**
+   * Inserts junction rows into `entry_tags` for the given tag IDs and returns
+   * the resolved Tag objects.  Surfaces any DB error via setError.
+   */
+  async function insertEntryTags(entryId: string, tagIds: string[]): Promise<Tag[]> {
+    if (tagIds.length === 0) return [];
+    const { error: err } = await supabase!
+      .from("entry_tags")
+      .insert(tagIds.map((tag_id) => ({ entry_id: entryId, tag_id })));
+    if (err) {
+      setError(err.message);
+      return [];
+    }
+    return tags.filter((t) => tagIds.includes(t.id));
+  }
+
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
   const handleStart = () => {
@@ -159,21 +201,28 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         ended_at: endedAt.toISOString(),
         duration_seconds: durationSeconds,
       })
-      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
+      .select(
+        "id, description, project_id, started_at, ended_at, duration_seconds, " +
+        "projects(name, color), entry_tags(tags(id, name, color))"
+      )
       .single();
 
     if (err) {
       setError(err.message);
     } else if (data) {
+      const entryId = (data as unknown as Record<string, unknown>).id as string;
+      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
       setEntries((prev) =>
         [
           {
-            ...(data as Omit<TimeEntry, "project_name" | "project_color">),
-            ...extractProjectFields((data as Record<string, unknown>).projects),
+            ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+            ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
+            entry_tags: entryTags,
           },
           ...prev,
         ].slice(0, MAX_RECENT_ENTRIES)
       );
+      setSelectedEntryTagIds([]);
     }
 
     setSaving(false);
@@ -209,7 +258,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     if (err) {
       setError(err.message);
     } else if (data) {
-      const project = data as Project;
+      const project: Project = { ...(data as Project), tags: [] };
       setProjects((prev) => [...prev, project]);
       setSelectedProjectId(project.id);
       setNewProjectName(project.name);
@@ -255,17 +304,23 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         ended_at: end.toISOString(),
         duration_seconds: durationSeconds,
       })
-      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
+      .select(
+        "id, description, project_id, started_at, ended_at, duration_seconds, " +
+        "projects(name, color), entry_tags(tags(id, name, color))"
+      )
       .single();
 
     if (err) {
       setError(err.message);
     } else if (data) {
+      const entryId = (data as unknown as Record<string, unknown>).id as string;
+      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
       setEntries((prev) =>
         [
           {
-            ...(data as Omit<TimeEntry, "project_name" | "project_color">),
-            ...extractProjectFields((data as Record<string, unknown>).projects),
+            ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+            ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
+            entry_tags: entryTags,
           },
           ...prev,
         ].slice(0, MAX_RECENT_ENTRIES)
@@ -275,6 +330,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       setManualStartTime("");
       setManualEndTime("");
       setManualDuration("");
+      setSelectedEntryTagIds([]);
     }
 
     setManualSaving(false);
@@ -288,6 +344,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     project_id: string;
     started_at: string;
     ended_at: string;
+    entry_tag_ids: string[];
   }) => {
     const { data, error: err } = await supabase
       .from("time_entries")
@@ -298,25 +355,92 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         ended_at: update.ended_at,
       })
       .eq("id", update.id)
-      .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name, color)")
+      .select(
+        "id, description, project_id, started_at, ended_at, duration_seconds, " +
+        "projects(name, color)"
+      )
       .single();
 
     if (err) {
       setError(err.message);
       throw err; // Re-throw so EditEntryModal can reset its saving state
     } else if (data) {
+      // Sync entry_tags: delete all then re-insert
+      const { error: deleteErr } = await supabase.from("entry_tags").delete().eq("entry_id", update.id);
+      if (deleteErr) {
+        setError(deleteErr.message);
+        throw deleteErr;
+      }
+      const entryTags = await insertEntryTags(update.id, update.entry_tag_ids);
       setEntries((prev) =>
         prev.map((e) =>
           e.id === update.id
             ? {
-              ...(data as Omit<TimeEntry, "project_name" | "project_color">),
-              ...extractProjectFields((data as Record<string, unknown>).projects),
+              ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+              ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
+              entry_tags: entryTags,
             }
             : e
         )
       );
       setEditingEntry(null);
     }
+  };
+
+  // ─── Tag handlers ─────────────────────────────────────────────────────────
+
+  const handleCreateTag = async (name: string, color: string) => {
+    setError(null);
+    const { data, error: err } = await supabase
+      .from("tags")
+      .insert({ name, color })
+      .select("id, name, color")
+      .single();
+    if (err) {
+      setError(err.message);
+    } else if (data) {
+      setTags((prev) => [...prev, data as unknown as Tag]);
+    }
+  };
+
+  const handleDeleteTag = async (id: string) => {
+    setError(null);
+    const { error: err } = await supabase.from("tags").delete().eq("id", id);
+    if (err) {
+      setError(err.message);
+    } else {
+      setTags((prev) => prev.filter((t) => t.id !== id));
+      // Remove from projects' local tag lists
+      setProjects((prev) =>
+        prev.map((p) => ({ ...p, tags: (p.tags ?? []).filter((t) => t.id !== id) }))
+      );
+      // Remove from entries' local tag lists
+      setEntries((prev) =>
+        prev.map((e) => ({ ...e, entry_tags: (e.entry_tags ?? []).filter((t) => t.id !== id) }))
+      );
+    }
+  };
+
+  /**
+   * Replace all tags on a project with the provided tag ID list.
+   * Deletes old project_tags rows then inserts new ones.
+   */
+  const handleUpdateProjectTags = async (projectId: string, tagIds: string[]) => {
+    setError(null);
+    await supabase.from("project_tags").delete().eq("project_id", projectId);
+    if (tagIds.length > 0) {
+      const { error: err } = await supabase
+        .from("project_tags")
+        .insert(tagIds.map((tag_id) => ({ project_id: projectId, tag_id })));
+      if (err) {
+        setError(err.message);
+        return;
+      }
+    }
+    const newTags = tags.filter((t) => tagIds.includes(t.id));
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, tags: newTags } : p))
+    );
   };
 
   const handleDeleteEntry = async (id: string) => {
@@ -326,6 +450,22 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       setError(err.message);
     } else {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+    }
+  };
+
+  const handleUpdateTagColor = async (id: string, color: string) => {
+    setError(null);
+    const { error: err } = await supabase.from("tags").update({ color }).eq("id", id);
+    if (err) {
+      setError(err.message);
+    } else {
+      setTags((prev) => prev.map((t) => (t.id === id ? { ...t, color } : t)));
+      setProjects((prev) =>
+        prev.map((p) => ({ ...p, tags: (p.tags ?? []).map((t) => (t.id === id ? { ...t, color } : t)) }))
+      );
+      setEntries((prev) =>
+        prev.map((e) => ({ ...e, entry_tags: (e.entry_tags ?? []).map((t) => (t.id === id ? { ...t, color } : t)) }))
+      );
     }
   };
 
@@ -415,6 +555,11 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
             handleCreateProject={handleCreateProject}
             onDeleteProject={handleDeleteProject}
             onUpdateProjectColor={handleUpdateProjectColor}
+            tags={tags}
+            onCreateTag={handleCreateTag}
+            onDeleteTag={handleDeleteTag}
+            onUpdateProjectTags={handleUpdateProjectTags}
+            onUpdateTagColor={handleUpdateTagColor}
           />
 
           <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-6 mt-8">
@@ -447,6 +592,17 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
                 className="mt-2 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
+            <div className="mt-4">
+              <TagSelector
+                allTags={tags}
+                selectedTagIds={selectedEntryTagIds}
+                onToggleTag={(id) => setSelectedEntryTagIds((prev) => toggleArrayId(prev, id))}
+                onCreateTag={handleCreateTag}
+                onDeleteTag={handleDeleteTag}
+                compact
+                label="Entry tags (optional)"
+              />
+            </div>
             {error && <p className="mt-4 text-xs text-rose-400">{error}</p>}
           </section>
 
@@ -468,6 +624,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
 
           <RecentEntries
             entries={entries}
+            projects={projects}
             onDeleteEntry={handleDeleteEntry}
             onEditEntry={handleEditEntry}
             onCopyToManual={handleCopyToManual}
@@ -477,6 +634,8 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
             <EditEntryModal
               entry={editingEntry}
               projects={projects}
+              tags={tags}
+              onCreateTag={handleCreateTag}
               onSave={handleSaveEditEntry}
               onClose={() => setEditingEntry(null)}
             />
