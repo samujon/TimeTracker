@@ -3,10 +3,18 @@ import { useState } from "react";
 import { TimeTracker } from "@/components/TimeTracker";
 import { StatsView } from "@/components/StatsView";
 import { useTheme } from "@/hooks/useTheme";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Home() {
   const [tab, setTab] = useState<"tracker" | "stats">("tracker");
   const { theme, toggleTheme } = useTheme();
+
+  // Keyboard shortcuts: 1 → Tracker tab, 2 → Stats tab
+  useKeyboardShortcuts({
+    "1": () => setTab("tracker"),
+    "2": () => setTab("stats"),
+  });
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-zinc-50 dark:bg-zinc-950 px-4 py-12 text-zinc-900 dark:text-zinc-100">
       <div className="w-full max-w-3xl">

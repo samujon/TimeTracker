@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -96,6 +96,38 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     void loadProjects();
   }, [supabase]);
 
+  // ─── Browser tab title ───────────────────────────────────────────────────────
+  useEffect(() => {
+    document.title = isRunning
+      ? `⏱ ${formattedElapsed}${description ? ` — ${description}` : " — Time Tracker"}`
+      : "Time Tracker";
+    return () => {
+      document.title = "Time Tracker";
+    };
+  }, [isRunning, formattedElapsed, description]);
+
+  // ─── Keyboard shortcut: Space → toggle timer ─────────────────────────────────
+  // handleToggle is defined after the conditional return, so we use a stable
+  // ref that is updated each render (set to null while saving to guard it).
+  const handleToggleRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) return;
+      if (e.key === " " && handleToggleRef.current) {
+        e.preventDefault();
+        handleToggleRef.current();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   // ─── Conditional return AFTER all hooks ─────────────────────────────────────
   if (!hasSupabaseEnv || !supabase) {
     return <SetupScreen />;
@@ -157,6 +189,10 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       handleStart();
     }
   };
+
+  // Keep the ref pointing to the latest handleToggle; null it while saving so
+  // the Space shortcut respects the same guard as the button's disabled state.
+  handleToggleRef.current = saving ? null : handleToggle;
 
   const handleCreateProject = async (e: FormEvent) => {
     e.preventDefault();

@@ -3,9 +3,9 @@
 ## Short term
 
 - [ ] **Tags/categories** on entries (beyond just project name) for finer reporting
-- [ ] **Running timer indicator** in the browser tab title (e.g. `⏱ 01:23 – My Task`)
-- [ ] **Keyboard shortcuts** — start/stop timer, switch tabs
-- [ ] **Export** — download entries as CSV for the current period
+- [x] **Running timer indicator** in the browser tab title (e.g. `⏱ 01:23 – My Task`)
+- [x] **Keyboard shortcuts** — start/stop timer, switch tabs
+- [x] **Export** — download entries as CSV for the current period
 - [ ] **Entry notes** — free-text field on each entry beyond just task name
 
 ## Mid term
