@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useTimer } from '../../src/components/useTimer';
+import { useTimer } from '../../src/hooks/useTimer';
 
 describe('useTimer', () => {
   it('initialises with correct default values', () => {

@@ -188,3 +188,17 @@ export function getPeriodRange(view: StatsPeriodView, date: Date): { from: Date;
 
     return { from, to };
 }
+
+/**
+ * Normalises a raw Supabase `time_entries` row (with nested `projects` and
+ * `entry_tags` joins) into a typed `TimeEntry`, resolving both the flat project
+ * name/color fields and the entry tag list.
+ */
+export function normaliseEntry(raw: Record<string, unknown>): TimeEntry {
+    return {
+        ...(raw as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+        ...extractProjectFields(raw.projects),
+        entry_tags: extractTagsFromJoin(raw.entry_tags),
+    };
+}
+

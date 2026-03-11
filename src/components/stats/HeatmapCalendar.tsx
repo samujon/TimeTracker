@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { DailyMap } from "./useHistoryData";
+import type { DailyMap } from "@/hooks/useHistoryData";
 import { formatLocalDate, startOfISOWeek } from "@/lib/timeUtils";
 
 type Props = {

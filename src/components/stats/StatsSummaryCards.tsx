@@ -1,20 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import type { StatsEntry, StatsView } from "./useStatsData";
+import type { StatsEntry, StatsView } from "@/hooks/useStatsData";
 import { getPeriodRange } from "@/lib/timeUtils";
-
+import { formatDuration } from "@/lib/formatDuration";
 type Props = {
     entries: StatsEntry[];
     view: StatsView;
     selectedDate: Date;
 };
-
-function fmt(totalSeconds: number): string {
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
 
 export function StatsSummaryCards({ entries, view, selectedDate }: Props) {
     const stats = useMemo(() => {
@@ -54,12 +48,12 @@ export function StatsSummaryCards({ entries, view, selectedDate }: Props) {
     const cards = [
         {
             label: "Total tracked",
-            value: fmt(stats.total),
+            value: formatDuration(stats.total),
             sub: null,
         },
         {
             label: "Daily average",
-            value: fmt(Math.round(stats.dailyAvg)),
+            value: formatDuration(Math.round(stats.dailyAvg)),
             sub: view !== "daily" ? "per day in period" : null,
         },
         {
@@ -67,12 +61,12 @@ export function StatsSummaryCards({ entries, view, selectedDate }: Props) {
             value: stats.peakDayDate
                 ? new Date(stats.peakDayDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
                 : "—",
-            sub: stats.peakDaySeconds > 0 ? fmt(stats.peakDaySeconds) : null,
+            sub: stats.peakDaySeconds > 0 ? formatDuration(stats.peakDaySeconds) : null,
         },
         {
             label: "Peak hour",
             value: stats.peakHour >= 0 ? `${String(stats.peakHour).padStart(2, "0")}:00` : "—",
-            sub: stats.peakHourSeconds > 0 ? fmt(stats.peakHourSeconds) : null,
+            sub: stats.peakHourSeconds > 0 ? formatDuration(stats.peakHourSeconds) : null,
         },
     ];
 

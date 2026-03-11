@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { TimeTracker } from '../../src/components/TimeTracker';
+import { TimeTracker } from '../../src/views/TimeTracker';
 
 const noop = () => {};
 

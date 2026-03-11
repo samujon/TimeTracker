@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import type { Project, Tag } from "@/types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import { useDisclosure } from "@/hooks/useDisclosure";
-import { TagSelector } from "./TagSelector";
-import { ColorPicker } from "./ColorPicker";
+import { TagSelector } from "@/components/shared/TagSelector";
+import { ColorPicker } from "@/components/shared/ColorPicker";
 
 type ProjectSelectorProps = {
   projects: Project[];

@@ -1,17 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import type { StatsEntry } from "./useStatsData";
-
+import type { StatsEntry } from "@/hooks/useStatsData";
+import { formatDuration } from "@/lib/formatDuration";
 type Props = {
     entries: StatsEntry[];
 };
-
-function fmt(s: number): string {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
 
 export function TopTasksList({ entries }: Props) {
     const tasks = useMemo(() => {
@@ -37,7 +31,7 @@ export function TopTasksList({ entries }: Props) {
                     <div key={desc}>
                         <div className="flex justify-between text-xs mb-0.5">
                             <span className="truncate text-zinc-700 dark:text-zinc-200 pr-3">{desc}</span>
-                            <span className="shrink-0 text-zinc-500 dark:text-zinc-400">{fmt(secs)}</span>
+                            <span className="shrink-0 text-zinc-500 dark:text-zinc-400">{formatDuration(secs)}</span>
                         </div>
                         <div className="h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                             <div

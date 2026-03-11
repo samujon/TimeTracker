@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import type { StatsEntry, StatsView } from "./useStatsData";
+import type { StatsEntry, StatsView } from "@/hooks/useStatsData";
 import { extractProjectFields } from "@/lib/timeUtils";
-
+import { formatDuration } from "@/lib/formatDuration";
 type Props = {
     current: StatsEntry[];
     previous: StatsEntry[];
@@ -19,12 +19,6 @@ function totalByProject(entries: StatsEntry[]): Record<string, { name: string; c
         map[pid].seconds += e.duration_seconds ?? 0;
     }
     return map;
-}
-
-function fmt(s: number): string {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 function periodLabel(view: StatsView): string {
@@ -78,7 +72,7 @@ export function PeriodComparison({ current, previous, view }: Props) {
                                     <span className="text-zinc-700 dark:text-zinc-200 font-medium">{row.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-                                    <span>{fmt(row.current)}</span>
+                                    <span>{formatDuration(row.current)}</span>
                                     <span className={`font-medium ${row.delta == null ? "text-zinc-400" : row.delta >= 0 ? "text-emerald-500" : "text-rose-400"}`}>
                                         {row.delta != null ? (row.delta >= 0 ? `+${row.delta}%` : `${row.delta}%`) : "new"}
                                     </span>
