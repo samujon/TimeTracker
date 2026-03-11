@@ -74,7 +74,7 @@ export function RecentEntries({ entries, onDeleteEntry, onEditEntry, onCopyToMan
                         />
                       )}
                       <p className="truncate text-zinc-900 dark:text-zinc-100 font-medium">
-                        {entry.project_name || "Untitled task"}
+                        {entry.project_name || "Untitled project"}
                       </p>
                     </div>
                     {entry.description?.trim() && (

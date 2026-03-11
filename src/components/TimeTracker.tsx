@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -96,6 +97,35 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     void loadProjects();
   }, [supabase]);
 
+  // ─── Browser tab title ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isRunning) {
+      document.title = "Time Tracker";
+      return () => { document.title = "Time Tracker"; };
+    }
+    const projectName = projects.find((p) => p.id === selectedProjectId)?.name ?? null;
+    const parts = [projectName, description || null].filter(Boolean).join(" · ");
+    document.title = `⏱ ${formattedElapsed}${parts ? ` — ${parts}` : " — Time Tracker"}`;
+    return () => {
+      document.title = "Time Tracker";
+    };
+  }, [isRunning, formattedElapsed, description, selectedProjectId, projects]);
+
+  // ─── Keyboard shortcut: Space → toggle timer ─────────────────────────────────
+  // handleToggle is defined after the conditional return, so we forward calls
+  // through a stable ref.  The ref is nulled while saving to match the
+  // button's disabled={saving} guard.
+  const handleToggleRef = useRef<(() => void) | null>(null);
+
+  const spaceHandler = useCallback((e: KeyboardEvent) => {
+    if (handleToggleRef.current) {
+      e.preventDefault();
+      handleToggleRef.current();
+    }
+  }, []);
+
+  useKeyboardShortcuts({ " ": spaceHandler });
+
   // ─── Conditional return AFTER all hooks ─────────────────────────────────────
   if (!hasSupabaseEnv || !supabase) {
     return <SetupScreen />;
@@ -157,6 +187,10 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       handleStart();
     }
   };
+
+  // Keep the ref pointing to the latest handleToggle; null it while saving so
+  // the Space shortcut respects the same guard as the button's disabled state.
+  handleToggleRef.current = saving ? null : handleToggle;
 
   const handleCreateProject = async (e: FormEvent) => {
     e.preventDefault();
@@ -329,6 +363,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     }
     setManualEndTime(ended ? formatLocalTime(ended) : "");
     setManualDescription(entry.description ?? "");
+    setDescription(entry.description ?? "");
 
     if (typeof entry.duration_seconds === "number") {
       const h = Math.floor(entry.duration_seconds / 3600).toString().padStart(2, "0");

@@ -16,3 +16,14 @@ export type Project = {
     name: string;
     color?: string;
 };
+
+/** A single row produced for CSV export. */
+export type ExportRow = {
+    date: string;
+    project: string;
+    description: string;
+    started_at: string;
+    ended_at: string;
+    duration_hms: string;
+    duration_seconds: number | string;
+};
