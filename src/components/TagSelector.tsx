@@ -3,8 +3,10 @@
 import React, { useRef, useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { Tag } from "@/types";
-import { PROJECT_COLORS, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useDisclosure } from "@/hooks/useDisclosure";
+import { ColorPicker } from "./ColorPicker";
 
 export type TagSelectorProps = {
   /** Full list of available tags the user can choose from. */
@@ -17,48 +19,12 @@ export type TagSelectorProps = {
   onCreateTag: (name: string, color: string) => Promise<void>;
   /** Called when the user deletes a tag from the global list. */
   onDeleteTag?: (tagId: string) => void;
+  /** Called when the user changes a tag's colour in the Manage tab. */
+  onUpdateTagColor?: (tagId: string, color: string) => Promise<void>;
   /** When true the selector is compact (no manage-tags panel). */
   compact?: boolean;
   label?: string;
 };
-
-/** Colour picker sub-component, shared between create and edit flows. */
-function ColorPicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (c: string) => void;
-}) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="flex flex-wrap gap-1 mb-2 justify-center">
-        {PROJECT_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className={`w-6 h-6 rounded-full border-2 transition-transform ${
-              value === c
-                ? "border-emerald-400 scale-110 ring-2 ring-emerald-300"
-                : "border-zinc-300 dark:border-zinc-700"
-            }`}
-            style={{ backgroundColor: c }}
-            onClick={() => onChange(c)}
-            aria-label={`Choose color ${c}`}
-          />
-        ))}
-      </div>
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 cursor-pointer"
-        title="Pick a custom colour"
-        style={{ minWidth: 32 }}
-      />
-    </div>
-  );
-}
 
 export function TagSelector({
   allTags,
@@ -66,23 +32,20 @@ export function TagSelector({
   onToggleTag,
   onCreateTag,
   onDeleteTag,
+  onUpdateTagColor,
   compact = false,
   label = "Tags",
 }: TagSelectorProps) {
   const [inputValue, setInputValue] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [newTagColor, setNewTagColor] = useState(DEFAULT_PROJECT_COLOR);
-  const [showColorPopover, setShowColorPopover] = useState(false);
   const [creating, setCreating] = useState(false);
   const [tab, setTab] = useState<"select" | "manage">("select");
   const [editColorTagId, setEditColorTagId] = useState<string | null>(null);
 
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const colorPopoverRef = useRef<HTMLDivElement | null>(null);
+  // useDisclosure manages open state + click-outside together.
+  const dropdownDisclosure = useDisclosure<HTMLDivElement>();
+  const colorDisclosure = useDisclosure<HTMLDivElement>();
   const editColorPopoverRef = useRef<HTMLDivElement | null>(null);
-
-  useClickOutside(wrapperRef, () => setDropdownOpen(false), dropdownOpen);
-  useClickOutside(colorPopoverRef, () => setShowColorPopover(false), showColorPopover);
   useClickOutside(editColorPopoverRef, () => setEditColorTagId(null), editColorTagId !== null);
 
   const selectedTags = allTags.filter((t) => selectedTagIds.includes(t.id));
@@ -102,7 +65,7 @@ export function TagSelector({
     await onCreateTag(name, newTagColor);
     setInputValue("");
     setNewTagColor(DEFAULT_PROJECT_COLOR);
-    setShowColorPopover(false);
+    colorDisclosure.close();
     setCreating(false);
   }
 
@@ -163,16 +126,22 @@ export function TagSelector({
       )}
 
       {(tab === "select" || compact) && (
-        <div className="relative" ref={wrapperRef}>
+        <div className="relative" ref={dropdownDisclosure.ref}>
           <div className="flex items-center gap-1">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value);
-                setDropdownOpen(true);
+                dropdownDisclosure.set(true);
               }}
-              onFocus={() => setDropdownOpen(true)}
+              onFocus={() => dropdownDisclosure.set(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && isNewTag) {
+                  e.preventDefault();
+                  void handleCreate();
+                }
+              }}
               placeholder="Add or search tags…"
               className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               autoComplete="off"
@@ -187,12 +156,12 @@ export function TagSelector({
                   aria-label="Choose tag colour"
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    setShowColorPopover((v) => !v);
+                    colorDisclosure.toggle();
                   }}
                 />
-                {showColorPopover && (
+                {colorDisclosure.open && (
                   <div
-                    ref={colorPopoverRef}
+                    ref={colorDisclosure.ref}
                     className="absolute z-30 right-0 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg"
                     style={{ minWidth: 180 }}
                     onMouseDown={(e) => e.preventDefault()}
@@ -215,7 +184,7 @@ export function TagSelector({
           </div>
 
           {/* Dropdown of matching existing tags */}
-          {dropdownOpen && filteredTags.length > 0 && (
+          {dropdownDisclosure.open && filteredTags.length > 0 && (
             <div className="absolute left-0 right-0 mt-1 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-40 overflow-y-auto">
               {filteredTags.map((tag) => (
                 <div
@@ -225,7 +194,7 @@ export function TagSelector({
                     e.preventDefault();
                     onToggleTag(tag.id);
                     setInputValue("");
-                    setDropdownOpen(false);
+                    dropdownDisclosure.close();
                   }}
                 >
                   <span
@@ -260,9 +229,29 @@ export function TagSelector({
                         type="button"
                         className="w-7 h-7 rounded-full border-2 border-zinc-300 dark:border-zinc-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
                         style={{ backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR }}
-                        title="Tag colour (click to view)"
-                        aria-label="Tag colour"
+                        title={onUpdateTagColor ? "Edit tag colour" : "Tag colour"}
+                        aria-label={onUpdateTagColor ? "Edit tag colour" : "Tag colour"}
+                        onClick={() =>
+                          onUpdateTagColor
+                            ? setEditColorTagId(editColorTagId === tag.id ? null : tag.id)
+                            : undefined
+                        }
                       />
+                      {editColorTagId === tag.id && onUpdateTagColor && (
+                        <div
+                          className="absolute z-30 left-0 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg"
+                          style={{ minWidth: 180 }}
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
+                          <ColorPicker
+                            value={tag.color ?? DEFAULT_PROJECT_COLOR}
+                            onChange={(c) => {
+                              void onUpdateTagColor(tag.id, c);
+                              setEditColorTagId(null);
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                     <span className="text-sm text-zinc-900 dark:text-zinc-100">{tag.name}</span>
                   </div>
@@ -284,3 +273,5 @@ export function TagSelector({
     </div>
   );
 }
+
+

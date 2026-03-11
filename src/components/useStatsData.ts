@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
-import { startOfISOWeek } from "@/lib/timeUtils";
+import { getPeriodRange } from "@/lib/timeUtils";
 import type { Tag } from "@/types";
 
 export type StatsView = "daily" | "weekly" | "monthly";
@@ -33,6 +33,13 @@ export function useStatsData(
   const [data, setData] = useState<StatsEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Stable key for the filter set — avoids re-fetching when a new array
+  // reference is passed with the same contents.
+  const filterKey = useMemo(
+    () => [...filterTagIds].sort().join("\0"),
+    [filterTagIds]
+  );
+
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -48,25 +55,7 @@ export function useStatsData(
     // Calculate the [from, to) date range for the selected view.
     // All week calculations use ISO 8601 (Monday = start of week) to match
     // the Swedish calendar convention.
-    let from: Date;
-    let to: Date;
-
-    if (view === "daily") {
-      from = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      to = new Date(from);
-      to.setDate(to.getDate() + 1);
-    } else if (view === "weekly") {
-      from = startOfISOWeek(selectedDate); // Monday of the selected week
-      to = new Date(from);
-      to.setDate(to.getDate() + 7);
-    } else {
-      from = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-      to = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-    }
+    const { from, to } = getPeriodRange(view, selectedDate);
 
     const fetchData = async () => {
       const { data: rows, error: err } = await supabase
@@ -114,10 +103,8 @@ export function useStatsData(
     return () => {
       cancelled = true;
     };
-    // Stringify filterTagIds so array reference changes don't cause spurious re-runs
-    // while still responding to content changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, selectedDate, JSON.stringify(filterTagIds)]); // groupBy intentionally omitted — not used in query
+  }, [view, selectedDate, filterKey]); // groupBy intentionally omitted — not used in query
 
   return { loading, data, error };
 }

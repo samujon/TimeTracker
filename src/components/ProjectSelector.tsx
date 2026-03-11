@@ -2,9 +2,10 @@
 
 import React, { useState, useRef } from "react";
 import type { Project, Tag } from "@/types";
-import { PROJECT_COLORS, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { TagSelector } from "./TagSelector";
+import { ColorPicker } from "./ColorPicker";
 
 type ProjectSelectorProps = {
   projects: Project[];
@@ -23,6 +24,7 @@ type ProjectSelectorProps = {
   onCreateTag: (name: string, color: string) => Promise<void>;
   onDeleteTag: (id: string) => void;
   onUpdateProjectTags: (projectId: string, tagIds: string[]) => Promise<void>;
+  onUpdateTagColor: (id: string, color: string) => Promise<void>;
 };
 
 export function ProjectSelector({
@@ -41,6 +43,7 @@ export function ProjectSelector({
   onCreateTag,
   onDeleteTag,
   onUpdateProjectTags,
+  onUpdateTagColor,
 }: ProjectSelectorProps) {
   const [tab, setTab] = useState<"main" | "delete" | "tags">("main");
   const [showColorPopover, setShowColorPopover] = useState(false);
@@ -56,6 +59,9 @@ export function ProjectSelector({
   useClickOutside(editColorPopoverRef, () => setEditColorProjectId(null), editColorProjectId !== null);
   // Close project dropdown on outside click
   useClickOutside(inputRef, () => setDropdownOpen(false), dropdownOpen);
+
+  // Hoist the selected-project lookup so it’s computed once per render.
+  const existingProject = projects.find((p) => p.name === newProjectName) ?? null;
 
 
   return (
@@ -130,11 +136,12 @@ export function ProjectSelector({
                       onMouseDown={() => {
                         setNewProjectName(project.name);
                         setSelectedProjectId(project.id);
+                        setDropdownOpen(false);
                       }}
                     >
                       <span
                         className="inline-block w-4 h-4 rounded-full border-2 border-zinc-700"
-                        style={{ backgroundColor: project.color || '#34d399' }}
+                        style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
                       />
                       <span className="text-sm text-zinc-900 dark:text-zinc-100">{project.name}</span>
                     </div>
@@ -143,7 +150,7 @@ export function ProjectSelector({
               )}
             </div>
             {/* Color picker button for new project (if not selecting existing) */}
-            {!projects.find(p => p.name === newProjectName) && (
+            {!existingProject && (
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
@@ -166,31 +173,12 @@ export function ProjectSelector({
                     tabIndex={-1}
                     onMouseDown={e => e.preventDefault()}
                   >
-                    <div className="flex flex-wrap gap-1 mb-2 justify-center">
-                      {PROJECT_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          className={`w-6 h-6 rounded-full border-2 transition-transform ${newProjectColor === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-300 dark:border-zinc-700"}`}
-                          style={{ backgroundColor: color }}
-                          onClick={() => { setNewProjectColor(color); setShowColorPopover(false); }}
-                          aria-label={`Choose color ${color}`}
-                        />
-                      ))}
-                    </div>
-                    <input
-                      type="color"
-                      value={newProjectColor}
-                      onChange={(e) => { setNewProjectColor(e.target.value); }}
-                      className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 cursor-pointer"
-                      title="Pick a custom color for this project"
-                      style={{ minWidth: 32 }}
-                    />
+                    <ColorPicker value={newProjectColor} onChange={(c) => { setNewProjectColor(c); setShowColorPopover(false); }} />
                   </div>
                 )}
               </div>
             )}
-            {!projects.find(p => p.name === newProjectName) && newProjectName.trim() && (
+            {!existingProject && newProjectName.trim() && (
               <button
                 type="submit"
                 disabled={creatingProject}
@@ -200,14 +188,14 @@ export function ProjectSelector({
               </button>
             )}
             {/* Show color dot if selecting existing project — clickable to edit color */}
-            {projects.find(p => p.name === newProjectName) && (() => {
-              const proj = projects.find(p => p.name === newProjectName)!;
+            {existingProject && (() => {
+              const proj = existingProject;
               return (
                 <div className="relative flex-shrink-0" ref={editColorPopoverRef}>
                   <button
                     type="button"
                     className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
-                    style={{ backgroundColor: proj.color || DEFAULT_PROJECT_COLOR }}
+                    style={{ backgroundColor: proj.color ?? DEFAULT_PROJECT_COLOR }}
                     title="Edit project color"
                     aria-label="Edit project color"
                     onMouseDown={e => {
@@ -222,25 +210,9 @@ export function ProjectSelector({
                       onMouseDown={e => e.preventDefault()}
                     >
                       <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2">Edit project color</p>
-                      <div className="flex flex-wrap gap-1 mb-2 justify-center">
-                        {PROJECT_COLORS.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`w-6 h-6 rounded-full border-2 transition-transform ${(proj.color || DEFAULT_PROJECT_COLOR) === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-300 dark:border-zinc-700"}`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => { onUpdateProjectColor(proj.id, color); setEditColorProjectId(null); }}
-                            aria-label={`Set color ${color}`}
-                          />
-                        ))}
-                      </div>
-                      <input
-                        type="color"
-                        defaultValue={proj.color || DEFAULT_PROJECT_COLOR}
-                        onChange={(e) => onUpdateProjectColor(proj.id, e.target.value)}
-                        className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 cursor-pointer"
-                        title="Pick a custom color"
-                        style={{ minWidth: 32 }}
+                      <ColorPicker
+                        value={proj.color ?? DEFAULT_PROJECT_COLOR}
+                        onChange={(c) => { void onUpdateProjectColor(proj.id, c); setEditColorProjectId(null); }}
                       />
                     </div>
                   )}
@@ -262,6 +234,7 @@ export function ProjectSelector({
             onToggleTag={() => undefined}
             onCreateTag={onCreateTag}
             onDeleteTag={onDeleteTag}
+            onUpdateTagColor={onUpdateTagColor}
             label="All tags"
           />
 
@@ -291,6 +264,7 @@ export function ProjectSelector({
                       void onUpdateProjectTags(project.id, next);
                     }}
                     onCreateTag={onCreateTag}
+                    onUpdateTagColor={onUpdateTagColor}
                     compact
                     label="Project tags"
                   />
@@ -306,46 +280,10 @@ export function ProjectSelector({
           {projects.map((project) => (
             <li key={project.id} className="flex items-center justify-between py-1">
               <div className="flex items-center gap-2">
-                <div className="relative" ref={editColorProjectId === project.id ? editColorPopoverRef : null}>
-                  <button
-                    type="button"
-                    className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
-                    style={{ backgroundColor: project.color || '#34d399' }}
-                    title="Edit project color"
-                    aria-label="Edit project color"
-                    onClick={() => {
-                      setEditColorProjectId(editColorProjectId === project.id ? null : project.id);
-                    }}
-                  />
-                  {editColorProjectId === project.id && (
-                    <div
-                      className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg flex flex-col items-center"
-                      style={{ minWidth: 180 }}
-                    >
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2">Edit project color</p>
-                      <div className="flex flex-wrap gap-1 mb-2 justify-center">
-                        {PROJECT_COLORS.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`w-6 h-6 rounded-full border-2 transition-transform ${(project.color || DEFAULT_PROJECT_COLOR) === color ? "border-emerald-400 scale-110 ring-2 ring-emerald-300" : "border-zinc-300 dark:border-zinc-700"}`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => { onUpdateProjectColor(project.id, color); setEditColorProjectId(null); }}
-                            aria-label={`Set color ${color}`}
-                          />
-                        ))}
-                      </div>
-                      <input
-                        type="color"
-                        defaultValue={project.color || DEFAULT_PROJECT_COLOR}
-                        onChange={(e) => onUpdateProjectColor(project.id, e.target.value)}
-                        className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 cursor-pointer"
-                        title="Pick a custom color"
-                        style={{ minWidth: 32 }}
-                      />
-                    </div>
-                  )}
-                </div>
+                <span
+                  className="inline-block w-5 h-5 rounded-full border border-zinc-300 dark:border-zinc-700 flex-shrink-0"
+                  style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
+                />
                 <span className="text-sm text-zinc-900 dark:text-zinc-100">{project.name}</span>
               </div>
               <button

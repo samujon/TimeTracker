@@ -13,31 +13,9 @@ import { RecentEntries } from "./RecentEntries";
 import { EditEntryModal } from "./EditEntryModal";
 import type { TimeEntry, Project, Tag } from "@/types";
 import { MAX_RECENT_ENTRIES, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
-import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields } from "@/lib/timeUtils";
+import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields, extractTagsFromJoin, toggleArrayId } from "@/lib/timeUtils";
 import type { Theme } from "@/hooks/useTheme";
 
-/**
- * Normalises the `projects` join returned by Supabase — which can be either an
- * array or a single object depending on relationship cardinality — into flat
- * `project_name` / `project_color` strings.
- */
-
-/**
- * Extracts Tag objects from a Supabase nested join result of the shape:
- *   [ { tags: { id, name, color } }, … ]  or  { tags: { id, name, color } }
- */
-function extractTagsFromJoin(raw: unknown): Tag[] {
-  if (!raw) return [];
-  const rows = Array.isArray(raw) ? raw : [raw];
-  const result: Tag[] = [];
-  for (const r of rows as Record<string, unknown>[]) {
-    const t = r.tags as Record<string, unknown> | null | undefined;
-    if (t && typeof t.id === "string" && typeof t.name === "string") {
-      result.push({ id: t.id, name: t.name, color: (t.color as string | null | undefined) ?? null });
-    }
-  }
-  return result;
-}
 export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   // ─── Get Supabase client ────────────────────────────────────────────────────
   // getSupabaseClient() returns a singleton — stable across renders.
@@ -177,6 +155,24 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     return <SetupScreen />;
   }
 
+  // ─── Local helpers (defined after conditional return so supabase is non-null) ─
+
+  /**
+   * Inserts junction rows into `entry_tags` for the given tag IDs and returns
+   * the resolved Tag objects.  Surfaces any DB error via setError.
+   */
+  async function insertEntryTags(entryId: string, tagIds: string[]): Promise<Tag[]> {
+    if (tagIds.length === 0) return [];
+    const { error: err } = await supabase!
+      .from("entry_tags")
+      .insert(tagIds.map((tag_id) => ({ entry_id: entryId, tag_id })));
+    if (err) {
+      setError(err.message);
+      return [];
+    }
+    return tags.filter((t) => tagIds.includes(t.id));
+  }
+
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
   const handleStart = () => {
@@ -215,15 +211,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       setError(err.message);
     } else if (data) {
       const entryId = (data as unknown as Record<string, unknown>).id as string;
-
-      // Write entry-specific tags
-      if (selectedEntryTagIds.length > 0) {
-        await supabase
-          .from("entry_tags")
-          .insert(selectedEntryTagIds.map((tag_id) => ({ entry_id: entryId, tag_id })));
-      }
-
-      const entryTags = tags.filter((t) => selectedEntryTagIds.includes(t.id));
+      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
       setEntries((prev) =>
         [
           {
@@ -326,15 +314,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       setError(err.message);
     } else if (data) {
       const entryId = (data as unknown as Record<string, unknown>).id as string;
-
-      // Write entry-specific tags
-      if (selectedEntryTagIds.length > 0) {
-        await supabase
-          .from("entry_tags")
-          .insert(selectedEntryTagIds.map((tag_id) => ({ entry_id: entryId, tag_id })));
-      }
-
-      const entryTags = tags.filter((t) => selectedEntryTagIds.includes(t.id));
+      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
       setEntries((prev) =>
         [
           {
@@ -386,14 +366,12 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       throw err; // Re-throw so EditEntryModal can reset its saving state
     } else if (data) {
       // Sync entry_tags: delete all then re-insert
-      await supabase.from("entry_tags").delete().eq("entry_id", update.id);
-      if (update.entry_tag_ids.length > 0) {
-        await supabase
-          .from("entry_tags")
-          .insert(update.entry_tag_ids.map((tag_id) => ({ entry_id: update.id, tag_id })));
+      const { error: deleteErr } = await supabase.from("entry_tags").delete().eq("entry_id", update.id);
+      if (deleteErr) {
+        setError(deleteErr.message);
+        throw deleteErr;
       }
-
-      const entryTags = tags.filter((t) => update.entry_tag_ids.includes(t.id));
+      const entryTags = await insertEntryTags(update.id, update.entry_tag_ids);
       setEntries((prev) =>
         prev.map((e) =>
           e.id === update.id
@@ -472,6 +450,22 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
       setError(err.message);
     } else {
       setEntries((prev) => prev.filter((e) => e.id !== id));
+    }
+  };
+
+  const handleUpdateTagColor = async (id: string, color: string) => {
+    setError(null);
+    const { error: err } = await supabase.from("tags").update({ color }).eq("id", id);
+    if (err) {
+      setError(err.message);
+    } else {
+      setTags((prev) => prev.map((t) => (t.id === id ? { ...t, color } : t)));
+      setProjects((prev) =>
+        prev.map((p) => ({ ...p, tags: (p.tags ?? []).map((t) => (t.id === id ? { ...t, color } : t)) }))
+      );
+      setEntries((prev) =>
+        prev.map((e) => ({ ...e, entry_tags: (e.entry_tags ?? []).map((t) => (t.id === id ? { ...t, color } : t)) }))
+      );
     }
   };
 
@@ -565,6 +559,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
             onCreateTag={handleCreateTag}
             onDeleteTag={handleDeleteTag}
             onUpdateProjectTags={handleUpdateProjectTags}
+            onUpdateTagColor={handleUpdateTagColor}
           />
 
           <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-6 mt-8">
@@ -601,11 +596,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
               <TagSelector
                 allTags={tags}
                 selectedTagIds={selectedEntryTagIds}
-                onToggleTag={(id) =>
-                  setSelectedEntryTagIds((prev) =>
-                    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-                  )
-                }
+                onToggleTag={(id) => setSelectedEntryTagIds((prev) => toggleArrayId(prev, id))}
                 onCreateTag={handleCreateTag}
                 onDeleteTag={handleDeleteTag}
                 compact

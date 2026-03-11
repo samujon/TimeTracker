@@ -62,7 +62,7 @@ export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onC
       setValidationError("Date, start time and end time are all required.");
       return;
     }
-    if (endTime <= startTime) {
+    if (new Date(`${date}T${endTime}:00`).getTime() <= new Date(`${date}T${startTime}:00`).getTime()) {
       setValidationError("End time must be after start time.");
       return;
     }

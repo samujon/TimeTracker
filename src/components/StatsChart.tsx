@@ -149,7 +149,7 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
     }
 
     return { labels, datasets };
-  }, [data, view, selectedDate, groupBy]);
+  }, [data, view, groupBy]);
 
   const chartData = { labels, datasets };
 

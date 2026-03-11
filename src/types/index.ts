@@ -22,7 +22,7 @@ export type TimeEntry = {
 export type Project = {
     id: string;
     name: string;
-    color?: string;
+    color?: string | null;
     /** Tags assigned to this project — inherited by all its entries. */
     tags?: Tag[];
 };

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { PeriodNav } from "@/components/PeriodNav";
 import { fetchExportData } from "@/components/useExportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
-import { startOfISOWeek, getISOWeek, getISOWeekYear } from "@/lib/timeUtils";
+import { getPeriodRange, getISOWeek, getISOWeekYear } from "@/lib/timeUtils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { TagSelector } from "@/components/TagSelector";
@@ -24,39 +24,27 @@ function buildPresets(view: StatsViewType, selectedDate: Date): ExportPreset[] {
     const now = new Date();
 
     // ── Current period ──────────────────────────────────────────────────────
-    let periodFrom: Date;
-    let periodTo: Date;
+    const { from: periodFrom, to: periodTo } = getPeriodRange(view, selectedDate);
     let periodFilename: string;
 
     if (view === "daily") {
-        periodFrom = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-        periodTo = new Date(periodFrom);
-        periodTo.setDate(periodTo.getDate() + 1);
         periodFilename = `time-entries-${periodFrom.toISOString().slice(0, 10)}.csv`;
     } else if (view === "weekly") {
-        periodFrom = startOfISOWeek(selectedDate);
-        periodTo = new Date(periodFrom);
-        periodTo.setDate(periodTo.getDate() + 7);
         const week = getISOWeek(selectedDate);
         const year = getISOWeekYear(selectedDate);
         periodFilename = `time-entries-W${String(week).padStart(2, "0")}-${year}.csv`;
     } else {
-        periodFrom = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-        periodTo = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
         const month = selectedDate.toLocaleString("en-US", { month: "short" }).toLowerCase();
         periodFilename = `time-entries-${selectedDate.getFullYear()}-${month}.csv`;
     }
 
     // ── This week ───────────────────────────────────────────────────────────
-    const weekFrom = startOfISOWeek(now);
-    const weekTo = new Date(weekFrom);
-    weekTo.setDate(weekTo.getDate() + 7);
+    const { from: weekFrom, to: weekTo } = getPeriodRange("weekly", now);
     const thisWeek = getISOWeek(now);
     const thisWeekYear = getISOWeekYear(now);
 
     // ── This month ──────────────────────────────────────────────────────────
-    const monthFrom = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthTo = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const { from: monthFrom, to: monthTo } = getPeriodRange("monthly", now);
     const monthName = now.toLocaleString("en-US", { month: "short" }).toLowerCase();
 
     // ── This year ───────────────────────────────────────────────────────────
@@ -261,7 +249,6 @@ export function StatsView() {
                                 style={{
                                     backgroundColor: active ? (tag.color ?? DEFAULT_PROJECT_COLOR) : "transparent",
                                     borderColor: tag.color ?? DEFAULT_PROJECT_COLOR,
-                                    opacity: active ? 1 : undefined,
                                 }}
                                 title={active ? `Remove filter: ${tag.name}` : `Filter by: ${tag.name}`}
                             >

@@ -118,3 +118,57 @@ export function computeEffectiveTags(entry: TimeEntry, project?: Project | null)
     }
     return result;
 }
+
+/**
+ * Extracts Tag objects from a Supabase nested join result of the shape:
+ *   [ { tags: { id, name, color } }, … ]  or  { tags: { id, name, color } }
+ *
+ * Works for both `project_tags(tags(...))` and `entry_tags(tags(...))` joins.
+ */
+export function extractTagsFromJoin(raw: unknown): Tag[] {
+    if (!raw) return [];
+    const rows = Array.isArray(raw) ? raw : [raw];
+    const result: Tag[] = [];
+    for (const r of rows as Record<string, unknown>[]) {
+        const t = r.tags as Record<string, unknown> | null | undefined;
+        if (t && typeof t.id === "string" && typeof t.name === "string") {
+            result.push({ id: t.id, name: t.name, color: (t.color as string | null | undefined) ?? null });
+        }
+    }
+    return result;
+}
+
+/**
+ * Toggles a string ID in an array — removes it if present, appends it otherwise.
+ * Returns a new array; the original is not mutated.
+ */
+export function toggleArrayId(arr: string[], id: string): string[] {
+    return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
+}
+
+/** View granularity used by the stats chart. */
+export type StatsPeriodView = "daily" | "weekly" | "monthly";
+
+/**
+ * Calculates the [from, to) date range for a given stats-view + anchor date,
+ * using ISO 8601 weeks (Monday = first day of week).
+ */
+export function getPeriodRange(view: StatsPeriodView, date: Date): { from: Date; to: Date } {
+    let from: Date;
+    let to: Date;
+
+    if (view === "daily") {
+        from = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        to = new Date(from);
+        to.setDate(to.getDate() + 1);
+    } else if (view === "weekly") {
+        from = startOfISOWeek(date);
+        to = new Date(from);
+        to.setDate(to.getDate() + 7);
+    } else {
+        from = new Date(date.getFullYear(), date.getMonth(), 1);
+        to = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+    }
+
+    return { from, to };
+}
