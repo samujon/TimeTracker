@@ -273,7 +273,7 @@ export function StatsView() {
             )}
 
             {/* Chart */}
-            <div className="h-80 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/70">
+            <div className="h-[28rem] flex items-center justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/70">
                 <StatsChart view={view} selectedDate={selectedDate} groupBy={groupBy} filterTagIds={filterTagIds} />
             </div>
         </div>

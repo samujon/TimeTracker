@@ -125,6 +125,8 @@ Click **Export CSV** on the Stats page to download all visible entries for the c
 | `Space` | Start / stop the timer |
 | `1` | Switch to Tracker tab |
 | `2` | Switch to Stats tab |
+| `3` | Switch to Editor tab |
+
 
 ---
 
