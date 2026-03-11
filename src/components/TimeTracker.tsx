@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { SetupScreen } from "./SetupScreen";
 import { useTimer } from "./useTimer";
@@ -107,26 +108,19 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
   }, [isRunning, formattedElapsed, description]);
 
   // ─── Keyboard shortcut: Space → toggle timer ─────────────────────────────────
-  // handleToggle is defined after the conditional return, so we use a stable
-  // ref that is updated each render (set to null while saving to guard it).
+  // handleToggle is defined after the conditional return, so we forward calls
+  // through a stable ref.  The ref is nulled while saving to match the
+  // button's disabled={saving} guard.
   const handleToggleRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement
-      ) return;
-      if (e.key === " " && handleToggleRef.current) {
-        e.preventDefault();
-        handleToggleRef.current();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+  const spaceHandler = useCallback((e: KeyboardEvent) => {
+    if (handleToggleRef.current) {
+      e.preventDefault();
+      handleToggleRef.current();
+    }
   }, []);
+
+  useKeyboardShortcuts({ " ": spaceHandler });
 
   // ─── Conditional return AFTER all hooks ─────────────────────────────────────
   if (!hasSupabaseEnv || !supabase) {

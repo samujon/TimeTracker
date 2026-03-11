@@ -84,3 +84,13 @@ export function formatLocalTime(date: Date): string {
     const m = date.getMinutes().toString().padStart(2, "0");
     return `${h}:${m}`;
 }
+
+/**
+ * Converts a total number of minutes into an "HH:MM" string.
+ * Hours are not capped at 24, so 1500 minutes → "25:00".
+ */
+export function formatHoursMinutes(totalMinutes: number): string {
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+}

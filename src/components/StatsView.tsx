@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { PeriodNav } from "@/components/PeriodNav";
 import { fetchExportData } from "@/components/useExportData";
@@ -112,7 +112,8 @@ export function StatsView() {
     const [exportLoading, setExportLoading] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    useClickOutside(dropdownRef, () => setExportOpen(false), exportOpen);
+    const closeDropdown = useCallback(() => setExportOpen(false), []);
+    useClickOutside(dropdownRef, closeDropdown, exportOpen);
 
     const handleExport = async (preset: ExportPreset) => {
         setExportOpen(false);
@@ -132,7 +133,7 @@ export function StatsView() {
         }
     };
 
-    const presets = buildPresets(view, selectedDate);
+    const presets = useMemo(() => buildPresets(view, selectedDate), [view, selectedDate]);
 
     return (
         <div className="space-y-4">
