@@ -99,13 +99,17 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
 
   // ─── Browser tab title ───────────────────────────────────────────────────────
   useEffect(() => {
-    document.title = isRunning
-      ? `⏱ ${formattedElapsed}${description ? ` — ${description}` : " — Time Tracker"}`
-      : "Time Tracker";
+    if (!isRunning) {
+      document.title = "Time Tracker";
+      return () => { document.title = "Time Tracker"; };
+    }
+    const projectName = projects.find((p) => p.id === selectedProjectId)?.name ?? null;
+    const parts = [projectName, description || null].filter(Boolean).join(" · ");
+    document.title = `⏱ ${formattedElapsed}${parts ? ` — ${parts}` : " — Time Tracker"}`;
     return () => {
       document.title = "Time Tracker";
     };
-  }, [isRunning, formattedElapsed, description]);
+  }, [isRunning, formattedElapsed, description, selectedProjectId, projects]);
 
   // ─── Keyboard shortcut: Space → toggle timer ─────────────────────────────────
   // handleToggle is defined after the conditional return, so we forward calls
@@ -359,6 +363,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     }
     setManualEndTime(ended ? formatLocalTime(ended) : "");
     setManualDescription(entry.description ?? "");
+    setDescription(entry.description ?? "");
 
     if (typeof entry.duration_seconds === "number") {
       const h = Math.floor(entry.duration_seconds / 3600).toString().padStart(2, "0");

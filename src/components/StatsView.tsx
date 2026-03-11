@@ -216,7 +216,7 @@ export function StatsView() {
                         }`}
                     onClick={() => setGroupBy("task")}
                 >
-                    Split by task
+                    Split by project
                 </button>
             </div>
 
