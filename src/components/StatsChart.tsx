@@ -155,6 +155,7 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: true },
       title: { display: false },
@@ -179,6 +180,10 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
   if (error) return <div className="text-rose-400 text-sm">{error}</div>;
   if (!labels.length) return <div className="text-zinc-500 text-sm">No data for this period.</div>;
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div className="w-full h-full px-2">
+      <Bar data={chartData} options={options} />
+    </div>
+  );
 }
 
