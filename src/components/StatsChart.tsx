@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,19 +10,23 @@ import {
   Tooltip,
   Legend,
   Title,
+  DoughnutController,
+  ArcElement,
 } from "chart.js";
-import { useStatsData } from "./useStatsData";
+import type { TooltipItem } from "chart.js";
 import type { StatsView, StatsGroup, StatsEntry } from "./useStatsData";
 import { getISOWeek, extractProjectFields } from "@/lib/timeUtils";
 import { useTheme } from "@/hooks/useTheme";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title, DoughnutController, ArcElement);
 
 type Props = {
   view: StatsView;
   selectedDate: Date;
   groupBy: StatsGroup;
-  filterTagIds?: string[];
+  loading: boolean;
+  data: StatsEntry[];
+  error: string | null;
 };
 
 type Dataset = {
@@ -38,8 +42,13 @@ function getProjectMeta(entry: StatsEntry): { name: string; color: string } {
   return { name: project_name ?? "(none)", color: project_color ?? "#34d399" };
 }
 
-export default function StatsChart({ view, selectedDate, groupBy, filterTagIds = [] }: Props) {
-  const { loading, data, error } = useStatsData(view, selectedDate, groupBy, filterTagIds);
+function fmtMinutes(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+export default function StatsChart({ view, selectedDate, groupBy, loading, data, error }: Props) {
   const { theme } = useTheme();
 
   const tickColor = theme === "dark" ? "#a1a1aa" : "#52525b";
@@ -131,7 +140,7 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
         });
       }
     } else {
-      // groupBy === "task": one bar per project, total for the period
+      // groupBy === "task": one segment per project in a donut chart
       const projectTotals: Record<string, number> = {};
       allProjectIds.forEach((pid) => (projectTotals[pid] = 0));
       data.forEach((entry) => {
@@ -165,13 +174,13 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
         beginAtZero: true,
         ticks: { color: tickColor },
         grid: { color: gridColor },
-        stacked: groupBy === "period",
+        stacked: true,
         title: { display: true, text: "Minutes", color: tickColor },
       },
       x: {
         ticks: { color: tickColor },
         grid: { color: gridColor },
-        stacked: groupBy === "period",
+        stacked: true,
       },
     },
   };
@@ -179,6 +188,29 @@ export default function StatsChart({ view, selectedDate, groupBy, filterTagIds =
   if (loading) return <div className="text-zinc-400 text-sm">Loading…</div>;
   if (error) return <div className="text-rose-400 text-sm">{error}</div>;
   if (!labels.length) return <div className="text-zinc-500 text-sm">No data for this period.</div>;
+
+  if (groupBy === "task") {
+    const donutOptions = {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: true, position: "right" as const },
+        tooltip: {
+          callbacks: {
+            label: (ctx: TooltipItem<"doughnut">) =>
+              ` ${ctx.label}: ${fmtMinutes(ctx.raw as number)}`,
+          },
+        },
+      },
+    };
+    return (
+      <div className="flex items-center justify-center w-full h-full px-4">
+        <div className="max-w-sm w-full">
+          <Doughnut data={chartData} options={donutOptions} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full px-2">

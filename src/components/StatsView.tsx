@@ -5,13 +5,19 @@ import dynamic from "next/dynamic";
 import { PeriodNav } from "@/components/PeriodNav";
 import { fetchExportData } from "@/components/useExportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
-import { getPeriodRange, getISOWeek, getISOWeekYear } from "@/lib/timeUtils";
+import { getPeriodRange, getISOWeek, getISOWeekYear, getPreviousPeriodDate } from "@/lib/timeUtils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { getSupabaseClient } from "@/lib/supabaseClient";
-import { TagSelector } from "@/components/TagSelector";
 import type { Tag } from "@/types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import { useStatsData } from "@/components/useStatsData";
 import type { StatsView as StatsViewType, StatsGroup } from "@/components/useStatsData";
+import { useHistoryData } from "@/components/useHistoryData";
+import { StatsSummaryCards } from "@/components/StatsSummaryCards";
+import { PeriodComparison } from "@/components/PeriodComparison";
+import { TopTasksList } from "@/components/TopTasksList";
+import { HeatmapCalendar } from "@/components/HeatmapCalendar";
+import { StreakDisplay } from "@/components/StreakDisplay";
 
 type ExportPreset = {
     label: string;
@@ -89,7 +95,10 @@ const StatsChart = dynamic(() => import("@/components/StatsChart"), {
     ssr: false,
     loading: () => <div className="text-zinc-400 text-sm">Loading chart…</div>,
 });
-
+const TagBreakdownChart = dynamic(() => import("@/components/TagBreakdownChart"), {
+    ssr: false,
+    loading: () => null,
+});
 /**
  * Self-contained statistics view: view-type toggle, period navigator,
  * group-by toggle, chart, and CSV export.
@@ -102,6 +111,18 @@ export function StatsView() {
     // Tags for filter
     const [allTags, setAllTags] = useState<Tag[]>([]);
     const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+
+    // Current period data (shared by chart + all new sections)
+    const { loading: currentLoading, data: currentData, error: currentError } =
+        useStatsData(view, selectedDate, "period", filterTagIds);
+
+    // Previous period data for the comparison panel
+    const previousDate = useMemo(() => getPreviousPeriodDate(view, selectedDate), [view, selectedDate]);
+    const { data: previousData } = useStatsData(view, previousDate, "period", filterTagIds);
+
+    // 12-month history for heatmap + streaks
+    const { loading: historyLoading, dailyMap, currentStreak, longestStreak, longestStreakThisYear } =
+        useHistoryData();
 
     useEffect(() => {
         const supabase = getSupabaseClient();
@@ -274,8 +295,39 @@ export function StatsView() {
 
             {/* Chart */}
             <div className="h-[28rem] flex items-center justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/70">
-                <StatsChart view={view} selectedDate={selectedDate} groupBy={groupBy} filterTagIds={filterTagIds} />
+                <StatsChart
+                    view={view}
+                    selectedDate={selectedDate}
+                    groupBy={groupBy}
+                    loading={currentLoading}
+                    data={currentData}
+                    error={currentError}
+                />
             </div>
+
+            {/* Summary cards */}
+            <StatsSummaryCards entries={currentData} view={view} selectedDate={selectedDate} />
+
+            {/* Period-over-period comparison */}
+            <PeriodComparison current={currentData} previous={previousData} view={view} />
+
+            {/* Tag breakdown donut */}
+            <TagBreakdownChart entries={currentData} />
+
+            {/* Top tasks bar list */}
+            <TopTasksList entries={currentData} />
+
+            {/* Heatmap + streaks (12-month window, loads independently) */}
+            {!historyLoading && (
+                <>
+                    <HeatmapCalendar dailyMap={dailyMap} />
+                    <StreakDisplay
+                        currentStreak={currentStreak}
+                        longestStreak={longestStreak}
+                        longestStreakThisYear={longestStreakThisYear}
+                    />
+                </>
+            )}
         </div>
     );
 }
