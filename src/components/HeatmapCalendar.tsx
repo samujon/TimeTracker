@@ -10,9 +10,7 @@ type Props = {
 
 const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", "Sun"];
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const CELL_SIZE = 12;
 const CELL_GAP = 2;
-const CELL_STEP = CELL_SIZE + CELL_GAP;
 
 function getCellColor(seconds: number, maxSeconds: number): string {
     const ratio = Math.min(seconds / maxSeconds, 1);
@@ -30,7 +28,7 @@ function fmtTooltip(dateStr: string, seconds: number): string {
 }
 
 export function HeatmapCalendar({ dailyMap }: Props) {
-    const { weeks, maxSeconds, monthLabels } = useMemo(() => {
+    const { weeks, maxSeconds, monthByWeek } = useMemo(() => {
         const today = new Date();
         const todayStr = formatLocalDate(today);
 
@@ -42,7 +40,7 @@ export function HeatmapCalendar({ dailyMap }: Props) {
         gridEnd.setDate(gridEnd.getDate() + 6); // Sunday of current week
 
         const weeks: { date: string; seconds: number; isToday: boolean; isFuture: boolean }[][] = [];
-        const monthLabels: { weekIndex: number; label: string }[] = [];
+        const monthByWeek: Record<number, string> = {};
 
         const d = new Date(gridStart);
         let lastMonth = -1;
@@ -51,7 +49,7 @@ export function HeatmapCalendar({ dailyMap }: Props) {
             const week: { date: string; seconds: number; isToday: boolean; isFuture: boolean }[] = [];
 
             if (d.getMonth() !== lastMonth) {
-                monthLabels.push({ weekIndex: weeks.length, label: MONTH_ABBR[d.getMonth()] });
+                monthByWeek[weeks.length] = MONTH_ABBR[d.getMonth()];
                 lastMonth = d.getMonth();
             }
 
@@ -69,64 +67,64 @@ export function HeatmapCalendar({ dailyMap }: Props) {
         }
 
         const maxSeconds = Math.max(1, ...Array.from(dailyMap.values()));
-        return { weeks, maxSeconds, monthLabels };
+        return { weeks, maxSeconds, monthByWeek };
     }, [dailyMap]);
 
     return (
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 px-4 py-4">
             <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-4">Activity — last 12 months</h3>
-            <div className="overflow-x-auto">
-                <div className="inline-flex gap-1 items-start">
-                    {/* Day labels column */}
-                    <div className="flex flex-col mt-[18px]" style={{ gap: CELL_GAP }}>
-                        {DAY_LABELS.map((label, i) => (
-                            <div
-                                key={i}
-                                className="text-[9px] text-zinc-400 text-right pr-1"
-                                style={{ height: CELL_SIZE, lineHeight: `${CELL_SIZE}px`, width: 24 }}
-                            >
-                                {label}
+            <div className="flex items-start w-full" style={{ gap: CELL_GAP }}>
+                {/* Day labels column */}
+                <div className="flex flex-col shrink-0 mt-[18px]" style={{ gap: CELL_GAP }}>
+                    {DAY_LABELS.map((label, i) => (
+                        <div
+                            key={i}
+                            className="text-[9px] text-zinc-400 text-right pr-1"
+                            style={{ height: 12, lineHeight: "12px", width: 24 }}
+                        >
+                            {label}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Grid area — fills all remaining width */}
+                <div className="flex-1 min-w-0">
+                    {/* Month labels: one slot per week column */}
+                    <div className="flex" style={{ gap: CELL_GAP, height: 18 }}>
+                        {weeks.map((_, wi) => (
+                            <div key={wi} className="flex-1 min-w-0">
+                                {monthByWeek[wi] && (
+                                    <span className="text-[9px] text-zinc-400 whitespace-nowrap">{monthByWeek[wi]}</span>
+                                )}
                             </div>
                         ))}
                     </div>
 
-                    {/* Grid: month labels row + week columns */}
-                    <div>
-                        {/* Month labels */}
-                        <div className="relative" style={{ height: 16 }}>
-                            {monthLabels.map(({ weekIndex, label }) => (
-                                <span
-                                    key={`${label}-${weekIndex}`}
-                                    className="absolute text-[9px] text-zinc-400"
-                                    style={{ left: weekIndex * CELL_STEP }}
-                                >
-                                    {label}
-                                </span>
-                            ))}
-                        </div>
-
-                        {/* Week columns */}
-                        <div className="flex" style={{ gap: CELL_GAP }}>
-                            {weeks.map((week, wi) => (
-                                <div key={wi} className="flex flex-col" style={{ gap: CELL_GAP }}>
-                                    {week.map((day) => (
-                                        <div
-                                            key={day.date}
-                                            title={day.isFuture ? undefined : fmtTooltip(day.date, day.seconds)}
-                                            style={{
-                                                width: CELL_SIZE,
-                                                height: CELL_SIZE,
-                                                ...(day.isToday ? { outline: "2px solid #10b981", outlineOffset: "-2px", borderRadius: 3 } : {}),
-                                                ...(day.seconds > 0 && !day.isFuture
-                                                    ? { backgroundColor: getCellColor(day.seconds, maxSeconds) }
-                                                    : {}),
-                                            }}
-                                            className={`rounded-sm ${day.isFuture ? "opacity-0" : day.seconds === 0 ? "bg-zinc-100 dark:bg-zinc-800" : ""}`}
-                                        />
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
+                    {/* Week columns */}
+                    <div className="flex w-full" style={{ gap: CELL_GAP }}>
+                        {weeks.map((week, wi) => (
+                            <div key={wi} className="flex-1 flex flex-col" style={{ gap: CELL_GAP }}>
+                                {week.map((day) => (
+                                    <div
+                                        key={day.date}
+                                        title={day.isFuture ? undefined : fmtTooltip(day.date, day.seconds)}
+                                        className={`w-full aspect-square rounded-sm ${
+                                            day.isFuture
+                                                ? "opacity-0"
+                                                : day.seconds === 0
+                                                ? "bg-zinc-100 dark:bg-zinc-800"
+                                                : ""
+                                        }`}
+                                        style={{
+                                            ...(day.isToday ? { outline: "2px solid #10b981", outlineOffset: "-2px", borderRadius: 3 } : {}),
+                                            ...(day.seconds > 0 && !day.isFuture
+                                                ? { backgroundColor: getCellColor(day.seconds, maxSeconds) }
+                                                : {}),
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

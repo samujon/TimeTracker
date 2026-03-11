@@ -95,10 +95,6 @@ const StatsChart = dynamic(() => import("@/components/StatsChart"), {
     ssr: false,
     loading: () => <div className="text-zinc-400 text-sm">Loading chart…</div>,
 });
-const TagBreakdownChart = dynamic(() => import("@/components/TagBreakdownChart"), {
-    ssr: false,
-    loading: () => null,
-});
 /**
  * Self-contained statistics view: view-type toggle, period navigator,
  * group-by toggle, chart, and CSV export.
@@ -310,9 +306,6 @@ export function StatsView() {
 
             {/* Period-over-period comparison */}
             <PeriodComparison current={currentData} previous={previousData} view={view} />
-
-            {/* Tag breakdown donut */}
-            <TagBreakdownChart entries={currentData} />
 
             {/* Top tasks bar list */}
             <TopTasksList entries={currentData} />
