@@ -13,7 +13,7 @@
 
 - [ ] **Goals / targets** — set a weekly hour target per project and show progress
 - [ ] **Billable hours flag** — mark entries as billable and filter/sum separately
-- [ ] **Richer statistics** — heatmap calendar, project breakdown donut chart, streaks
+- [x] **Richer statistics** — heatmap calendar, project breakdown donut chart, streaks
 - [ ] **PWA support** — installable on mobile, offline-capable timer (stores locally, syncs when online)
 - [ ] **Date range reports** — custom range picker, not just daily/weekly/monthly
 - [ ] **Idle detection** — warn if the timer has been running for an unusually long time
