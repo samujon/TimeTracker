@@ -1,4 +1,5 @@
 import { getISOWeek, startOfISOWeek, endOfISOWeek } from "date-fns";
+import type { Tag, TimeEntry, Project } from "@/types";
 
 // Re-export date-fns ISO week helpers under project-consistent names.
 export { getISOWeek, startOfISOWeek, endOfISOWeek };
@@ -93,4 +94,27 @@ export function formatHoursMinutes(totalMinutes: number): string {
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Returns the union of project-inherited tags and entry-specific tags,
+ * de-duplicated by tag id. Project tags come first.
+ */
+export function computeEffectiveTags(entry: TimeEntry, project?: Project | null): Tag[] {
+    const seen = new Set<string>();
+    const result: Tag[] = [];
+
+    for (const tag of project?.tags ?? []) {
+        if (!seen.has(tag.id)) {
+            seen.add(tag.id);
+            result.push(tag);
+        }
+    }
+    for (const tag of entry.entry_tags ?? []) {
+        if (!seen.has(tag.id)) {
+            seen.add(tag.id);
+            result.push(tag);
+        }
+    }
+    return result;
 }

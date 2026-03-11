@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { PeriodNav } from "@/components/PeriodNav";
 import { fetchExportData } from "@/components/useExportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
 import { startOfISOWeek, getISOWeek, getISOWeekYear } from "@/lib/timeUtils";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { getSupabaseClient } from "@/lib/supabaseClient";
+import { TagSelector } from "@/components/TagSelector";
+import type { Tag } from "@/types";
+import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import type { StatsView as StatsViewType, StatsGroup } from "@/components/useStatsData";
 
 type ExportPreset = {
@@ -106,6 +110,22 @@ export function StatsView() {
     const [view, setView] = useState<StatsViewType>("weekly");
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
     const [groupBy, setGroupBy] = useState<StatsGroup>("period");
+
+    // Tags for filter
+    const [allTags, setAllTags] = useState<Tag[]>([]);
+    const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        const supabase = getSupabaseClient();
+        if (!supabase) return;
+        void supabase
+            .from("tags")
+            .select("id, name, color")
+            .order("created_at", { ascending: true })
+            .then(({ data }) => {
+                if (data) setAllTags(data as Tag[]);
+            });
+    }, []);
 
     // Export dropdown state
     const [exportOpen, setExportOpen] = useState(false);
@@ -220,9 +240,54 @@ export function StatsView() {
                 </button>
             </div>
 
+            {/* Tag filter */}
+            {allTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Filter by tag:</span>
+                    {allTags.map((tag) => {
+                        const active = filterTagIds.includes(tag.id);
+                        return (
+                            <button
+                                key={tag.id}
+                                type="button"
+                                onClick={() =>
+                                    setFilterTagIds((prev) =>
+                                        active ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                                    )
+                                }
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium border-2 transition ${
+                                    active ? "border-transparent text-zinc-950" : "border-transparent text-zinc-900 dark:text-zinc-100 opacity-50 hover:opacity-80"
+                                }`}
+                                style={{
+                                    backgroundColor: active ? (tag.color ?? DEFAULT_PROJECT_COLOR) : "transparent",
+                                    borderColor: tag.color ?? DEFAULT_PROJECT_COLOR,
+                                    opacity: active ? 1 : undefined,
+                                }}
+                                title={active ? `Remove filter: ${tag.name}` : `Filter by: ${tag.name}`}
+                            >
+                                <span
+                                    className="inline-block w-2 h-2 rounded-full mr-1"
+                                    style={{ backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR }}
+                                />
+                                {tag.name}
+                            </button>
+                        );
+                    })}
+                    {filterTagIds.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setFilterTagIds([])}
+                            className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 underline"
+                        >
+                            Clear filters
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Chart */}
             <div className="h-80 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/70">
-                <StatsChart view={view} selectedDate={selectedDate} groupBy={groupBy} />
+                <StatsChart view={view} selectedDate={selectedDate} groupBy={groupBy} filterTagIds={filterTagIds} />
             </div>
         </div>
     );

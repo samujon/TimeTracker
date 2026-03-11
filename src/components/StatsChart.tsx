@@ -22,6 +22,7 @@ type Props = {
   view: StatsView;
   selectedDate: Date;
   groupBy: StatsGroup;
+  filterTagIds?: string[];
 };
 
 type Dataset = {
@@ -37,8 +38,8 @@ function getProjectMeta(entry: StatsEntry): { name: string; color: string } {
   return { name: project_name ?? "(none)", color: project_color ?? "#34d399" };
 }
 
-export default function StatsChart({ view, selectedDate, groupBy }: Props) {
-  const { loading, data, error } = useStatsData(view, selectedDate, groupBy);
+export default function StatsChart({ view, selectedDate, groupBy, filterTagIds = [] }: Props) {
+  const { loading, data, error } = useStatsData(view, selectedDate, groupBy, filterTagIds);
   const { theme } = useTheme();
 
   const tickColor = theme === "dark" ? "#a1a1aa" : "#52525b";

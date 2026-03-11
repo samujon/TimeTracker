@@ -4,8 +4,10 @@ import { useState } from "react";
 import DatePicker from "react-datepicker";
 import { sv } from "date-fns/locale/sv";
 import "react-datepicker/dist/react-datepicker.css";
-import type { Project } from "@/types";
+import type { Project, Tag } from "@/types";
 import { formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
+import { TagSelector } from "./TagSelector";
+import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 
 type EditEntryModalProps = {
   entry: {
@@ -14,8 +16,11 @@ type EditEntryModalProps = {
     project_id: string | null;
     started_at: string;
     ended_at: string | null;
+    entry_tags?: Tag[];
   };
   projects: Project[];
+  tags: Tag[];
+  onCreateTag: (name: string, color: string) => Promise<void>;
   /** Async — the modal resets its `saving` state after the promise settles. */
   onSave: (update: {
     id: string;
@@ -23,11 +28,12 @@ type EditEntryModalProps = {
     project_id: string;
     started_at: string;
     ended_at: string;
+    entry_tag_ids: string[];
   }) => Promise<void>;
   onClose: () => void;
 };
 
-export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryModalProps) {
+export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onClose }: EditEntryModalProps) {
   // Parse ISO timestamps into local-time parts so the displayed values match
   // what the user sees in their local timezone (e.g. CET/CEST for Swedish users).
   const startDate = entry.started_at ? new Date(entry.started_at) : null;
@@ -38,8 +44,15 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
   const [date, setDate] = useState(() => (startDate ? formatLocalDate(startDate) : ""));
   const [startTime, setStartTime] = useState(() => (startDate ? formatLocalTime(startDate) : ""));
   const [endTime, setEndTime] = useState(() => (endDate ? formatLocalTime(endDate) : ""));
+  const [entryTagIds, setEntryTagIds] = useState<string[]>(() =>
+    (entry.entry_tags ?? []).map((t) => t.id)
+  );
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Inherited project tags (read-only display)
+  const selectedProject = projects.find((p) => p.id === projectId);
+  const inheritedTags = selectedProject?.tags ?? [];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +73,7 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
 
     setSaving(true);
     try {
-      await onSave({ id: entry.id, description, project_id: projectId, started_at: startedAt, ended_at: endedAt });
+      await onSave({ id: entry.id, description, project_id: projectId, started_at: startedAt, ended_at: endedAt, entry_tag_ids: entryTagIds });
     } finally {
       setSaving(false);
     }
@@ -132,6 +145,42 @@ export function EditEntryModal({ entry, projects, onSave, onClose }: EditEntryMo
               className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
+
+          {/* Inherited project tags — read-only */}
+          {inheritedTags.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                From project
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {inheritedTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium text-zinc-950 opacity-80"
+                    style={{ backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR }}
+                    title="Inherited from project (not editable here)"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Entry-specific tags */}
+          <TagSelector
+            allTags={tags}
+            selectedTagIds={entryTagIds}
+            onToggleTag={(id) =>
+              setEntryTagIds((prev) =>
+                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+              )
+            }
+            onCreateTag={onCreateTag}
+            compact
+            label="Entry tags"
+          />
+
           {validationError && (
             <p className="text-xs text-rose-400">{validationError}</p>
           )}

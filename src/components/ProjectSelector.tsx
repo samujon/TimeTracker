@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import type { Project } from "@/types";
+import type { Project, Tag } from "@/types";
 import { PROJECT_COLORS, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { TagSelector } from "./TagSelector";
 
 type ProjectSelectorProps = {
   projects: Project[];
@@ -17,6 +18,11 @@ type ProjectSelectorProps = {
   handleCreateProject: (e: React.FormEvent) => void;
   onDeleteProject: (id: string) => void;
   onUpdateProjectColor: (id: string, color: string) => Promise<void>;
+  // Tags
+  tags: Tag[];
+  onCreateTag: (name: string, color: string) => Promise<void>;
+  onDeleteTag: (id: string) => void;
+  onUpdateProjectTags: (projectId: string, tagIds: string[]) => Promise<void>;
 };
 
 export function ProjectSelector({
@@ -31,8 +37,12 @@ export function ProjectSelector({
   handleCreateProject,
   onDeleteProject,
   onUpdateProjectColor,
+  tags,
+  onCreateTag,
+  onDeleteTag,
+  onUpdateProjectTags,
 }: ProjectSelectorProps) {
-  const [tab, setTab] = useState<"main" | "delete">("main");
+  const [tab, setTab] = useState<"main" | "delete" | "tags">("main");
   const [showColorPopover, setShowColorPopover] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editColorProjectId, setEditColorProjectId] = useState<string | null>(null);
@@ -65,6 +75,13 @@ export function ProjectSelector({
           onClick={() => setTab("main")}
         >
           Select/Add
+        </button>
+        <button
+          type="button"
+          className={`rounded-full px-4 py-1 text-xs font-medium transition ${tab === "tags" ? "bg-violet-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
+          onClick={() => setTab("tags")}
+        >
+          Tags
         </button>
         <button
           type="button"
@@ -234,6 +251,54 @@ export function ProjectSelector({
           {/* Removed duplicate color picker below input */}
           {/* Removed duplicate Add button below input row */}
         </form>
+      )}
+
+      {tab === "tags" && (
+        <div className="space-y-4">
+          {/* Global tag management */}
+          <TagSelector
+            allTags={tags}
+            selectedTagIds={[]}
+            onToggleTag={() => undefined}
+            onCreateTag={onCreateTag}
+            onDeleteTag={onDeleteTag}
+            label="All tags"
+          />
+
+          {/* Per-project tag assignment */}
+          {projects.length > 0 && (
+            <div className="space-y-3 mt-4">
+              <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                Tags per project
+              </p>
+              {projects.map((project) => (
+                <div key={project.id} className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className="inline-block w-3 h-3 rounded-full border border-zinc-300 dark:border-zinc-700"
+                      style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
+                    />
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{project.name}</span>
+                  </div>
+                  <TagSelector
+                    allTags={tags}
+                    selectedTagIds={(project.tags ?? []).map((t) => t.id)}
+                    onToggleTag={(tagId) => {
+                      const current = (project.tags ?? []).map((t) => t.id);
+                      const next = current.includes(tagId)
+                        ? current.filter((id) => id !== tagId)
+                        : [...current, tagId];
+                      void onUpdateProjectTags(project.id, next);
+                    }}
+                    onCreateTag={onCreateTag}
+                    compact
+                    label="Project tags"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {tab === "delete" && projects.length > 0 && (
