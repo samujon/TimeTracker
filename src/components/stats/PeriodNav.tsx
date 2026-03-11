@@ -2,7 +2,7 @@
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { sv } from "date-fns/locale/sv";
+import { enCA } from "date-fns/locale/en-CA";
 import { getISOWeek, getISOWeekYear, startOfISOWeek, endOfISOWeek } from "@/lib/timeUtils";
 
 
@@ -24,15 +24,15 @@ export function PeriodNav({
   }
 
   function formatLabel(date: Date) {
-    if (view === "daily") return date.toLocaleDateString("sv-SE");
+    if (view === "daily") return date.toLocaleDateString("en-CA");
     if (view === "weekly") {
       const start = startOfISOWeek(date);
       const end = endOfISOWeek(date);
       const week = getISOWeek(date);
       const year = getISOWeekYear(date);
-      return `W${week} ${year} (${start.toLocaleDateString("sv-SE")} – ${end.toLocaleDateString("sv-SE")})`;
+      return `W${week} ${year} (${start.toLocaleDateString("en-CA")} \u2013 ${end.toLocaleDateString("en-CA")})`;
     }
-    if (view === "monthly") return date.toLocaleString("sv-SE", { month: "long", year: "numeric" });
+    if (view === "monthly") return date.toLocaleString("en-CA", { month: "long", year: "numeric" });
     return "";
   }
 
@@ -51,7 +51,7 @@ export function PeriodNav({
             selected={selectedDate}
             onChange={(date: Date | null) => date && onChange(date)}
             dateFormat="yyyy-MM-dd"
-            locale={sv}
+            locale={enCA}
             calendarStartDay={1}
             className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             popperClassName="z-50"
@@ -79,7 +79,7 @@ export function PeriodNav({
             onChange={(date: Date | null) => date && onChange(startOfISOWeek(date))}
             dateFormat="yyyy-'W'II"
             showWeekPicker
-            locale={sv}
+            locale={enCA}
             calendarStartDay={1}
             className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             popperClassName="z-50"
@@ -87,7 +87,7 @@ export function PeriodNav({
             renderCustomHeader={({ date, decreaseMonth, increaseMonth }: { date: Date; decreaseMonth: () => void; increaseMonth: () => void }) => (
               <div className="flex items-center justify-between mb-2">
                 <button onClick={decreaseMonth} className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-100">&lt;</button>
-                <span className="mx-2 text-sm font-medium">{date.toLocaleString("sv-SE", { month: "long", year: "numeric" })}</span>
+                <span className="mx-2 text-sm font-medium">{date.toLocaleString("en-CA", { month: "long", year: "numeric" })}</span>
                 <button onClick={increaseMonth} className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-100">&gt;</button>
               </div>
             )}
@@ -114,7 +114,7 @@ export function PeriodNav({
             onChange={(date: Date | null) => date && onChange(date)}
             dateFormat="MMMM yyyy"
             showMonthYearPicker
-            locale={sv}
+            locale={enCA}
             calendarStartDay={1}
             className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             popperClassName="z-50"

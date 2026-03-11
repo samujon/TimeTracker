@@ -1,5 +1,3 @@
-"use client";
-
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { extractProjectFields } from "@/lib/timeUtils";
 import { formatDurationHMS } from "@/lib/csvUtils";

@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { TimeTracker } from "@/components/TimeTracker";
-import { StatsView } from "@/components/StatsView";
-import { EditorView } from "@/components/EditorView";
+import { TimeTracker } from "@/views/TimeTracker";
+import { StatsView } from "@/views/StatsView";
+import { EditorView } from "@/views/EditorView";
 import { useTheme } from "@/hooks/useTheme";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 

@@ -150,6 +150,22 @@ export function toggleArrayId(arr: string[], id: string): string[] {
 export type StatsPeriodView = "daily" | "weekly" | "monthly";
 
 /**
+ * Returns the anchor date for the period immediately before the given one.
+ * daily → 1 day back, weekly → 7 days back, monthly → 1 month back.
+ */
+export function getPreviousPeriodDate(view: StatsPeriodView, date: Date): Date {
+    const d = new Date(date);
+    if (view === "daily") {
+        d.setDate(d.getDate() - 1);
+    } else if (view === "weekly") {
+        d.setDate(d.getDate() - 7);
+    } else {
+        d.setMonth(d.getMonth() - 1);
+    }
+    return d;
+}
+
+/**
  * Calculates the [from, to) date range for a given stats-view + anchor date,
  * using ISO 8601 weeks (Monday = first day of week).
  */
@@ -172,3 +188,17 @@ export function getPeriodRange(view: StatsPeriodView, date: Date): { from: Date;
 
     return { from, to };
 }
+
+/**
+ * Normalises a raw Supabase `time_entries` row (with nested `projects` and
+ * `entry_tags` joins) into a typed `TimeEntry`, resolving both the flat project
+ * name/color fields and the entry tag list.
+ */
+export function normaliseEntry(raw: Record<string, unknown>): TimeEntry {
+    return {
+        ...(raw as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+        ...extractProjectFields(raw.projects),
+        entry_tags: extractTagsFromJoin(raw.entry_tags),
+    };
+}
+

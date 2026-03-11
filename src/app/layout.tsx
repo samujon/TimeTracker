@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sv" className="h-full dark">
+    <html lang="en" className="h-full dark">
       <head>
         {/* Prevent flash of wrong theme by applying stored preference before first paint */}
         <script

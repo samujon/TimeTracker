@@ -9,16 +9,22 @@ A minimalist time tracking app built with **Next.js App Router**, **Tailwind CSS
 - **Projects** — create colour‑coded projects; reuse them across sessions; edit colours at any time
 - **Tags** — multi‑tag system with colour‑coded labels; assign tags globally per project (inherited by all its entries) or add extra tags to individual entries; stats can filter by tag
 - **Recent entries** — view, edit, copy, and delete your last 10 sessions
-- **Statistics** — daily, weekly, and monthly bar charts grouped by period or project; ISO 8601 week numbering (Monday start)
-- **Export** — download entries as CSV for the currently viewed period
-- **Keyboard shortcuts** — `Space` to start/stop the timer, `1` / `2` to switch between Tracker and Stats tabs
+- **Statistics** — daily, weekly, and monthly bar charts; ISO 8601 week numbering (Monday start)
+  - Summary cards: total time, daily average, peak day and peak hour
+  - Period comparison: current vs previous period per project
+  - Top tasks: top 10 descriptions by total time
+  - Activity heatmap: last 12 months GitHub‑style calendar
+  - Streaks: current, longest all‑time, and longest this year
+- **Export** — download entries as CSV (current period, this week/month/year, or all time)
+- **Editor** — browse, search, and edit all entries in a scrollable table
+- **Keyboard shortcuts** — `Space` to start/stop the timer, `1` / `2` / `3` to switch tabs
 - **Dark / light mode** — toggle in the UI; respects system preference by default
 
 ### Tech stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL + RLS) |
 | Charts | Chart.js + react-chartjs-2 |
@@ -113,10 +119,17 @@ Fill in the date, start time, and end time (or a duration like `1:30` or `90m`) 
 - Filter the Stats view by one or more tags to see time for a specific area of work.
 
 ### Statistics
-Navigate to the **Stats** page. Use the **Daily / Weekly / Monthly** toggle to change the period and **Split by period / project** to switch the chart grouping.
+Navigate to the **Stats** tab. Use the **Daily / Weekly / Monthly** toggle to change the period and the **Split by period / project** toggle to switch the chart grouping.
+
+Below the chart you will find:
+- **Summary cards** — total tracked time, daily average, peak day, and peak hour for the selected period.
+- **Period comparison** — side‑by‑side per-project bars comparing the current period to the previous one.
+- **Top tasks** — the 10 most time-consuming descriptions for the current period.
+- **Activity heatmap** — a GitHub‑style calendar showing tracked days over the last 12 months.
+- **Streaks** — your current daily streak, longest all-time streak, and longest streak this year.
 
 ### Export
-Click **Export CSV** on the Stats page to download all visible entries for the current period.
+Click **Export CSV** on the Stats tab and choose a preset (current period, this week, this month, this year, or all time) to download the corresponding entries.
 
 ### Keyboard shortcuts
 

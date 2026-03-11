@@ -10,6 +10,7 @@ export type StatsGroup = "period" | "task";
 
 export type StatsEntry = {
   project_id: string | null;
+  description: string | null;
   duration_seconds: number | null;
   started_at: string;
   projects: {
@@ -61,7 +62,7 @@ export function useStatsData(
       const { data: rows, error: err } = await supabase
         .from("time_entries")
         .select(
-          "project_id, duration_seconds, started_at, " +
+          "project_id, description, duration_seconds, started_at, " +
           "projects(name, color, project_tags(tag_id, tags(id, name, color))), " +
           "entry_tags(tag_id, tags(id, name, color))"
         )
