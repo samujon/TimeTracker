@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import type { Project, Tag } from "@/types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { TagSelector } from "./TagSelector";
 import { ColorPicker } from "./ColorPicker";
 
@@ -46,21 +46,13 @@ export function ProjectSelector({
   onUpdateTagColor,
 }: ProjectSelectorProps) {
   const [tab, setTab] = useState<"main" | "delete" | "tags">("main");
-  const [showColorPopover, setShowColorPopover] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [editColorProjectId, setEditColorProjectId] = useState<string | null>(null);
-  const colorPopoverRef = useRef<HTMLDivElement | null>(null);
-  const editColorPopoverRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLDivElement | null>(null);
 
-  // Close colour popover on outside click
-  useClickOutside(colorPopoverRef, () => setShowColorPopover(false), showColorPopover);
-  // Close edit-colour popover on outside click
-  useClickOutside(editColorPopoverRef, () => setEditColorProjectId(null), editColorProjectId !== null);
-  // Close project dropdown on outside click
-  useClickOutside(inputRef, () => setDropdownOpen(false), dropdownOpen);
+  // useDisclosure handles open state + click-outside for each popover/dropdown.
+  const newColorDisclosure = useDisclosure<HTMLDivElement>();
+  const editColorDisclosure = useDisclosure<HTMLDivElement>();
+  const dropdownDisclosure = useDisclosure<HTMLDivElement>();
 
-  // Hoist the selected-project lookup so it’s computed once per render.
+  // Hoist the selected-project lookup so it's computed once per render.
   const existingProject = projects.find((p) => p.name === newProjectName) ?? null;
 
 
@@ -102,8 +94,7 @@ export function ProjectSelector({
       {tab === "main" && (
         <form onSubmit={handleCreateProject} className="flex flex-col gap-2">
           <label className="block text-xs font-medium text-zinc-300 mb-1">Project</label>
-          <div className="flex items-center gap-2 relative">
-            <div className="flex-1 min-w-0" ref={inputRef}>
+          <div className="relative flex items-center gap-2" ref={dropdownDisclosure.ref}>
               <input
                 type="text"
                 value={newProjectName}
@@ -116,16 +107,16 @@ export function ProjectSelector({
                     setSelectedProjectId("");
                   }
                 }}
-                onFocus={() => setDropdownOpen(true)}
-                onDoubleClick={() => setDropdownOpen(true)}
-                className="w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                onFocus={() => dropdownDisclosure.set(true)}
+                onDoubleClick={() => dropdownDisclosure.set(true)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 placeholder="Type or pick a project"
                 disabled={creatingProject}
                 autoComplete="off"
               />
               {/* Custom dropdown only visible when input is focused or typing */}
-              {dropdownOpen && (
-                <div className="absolute left-0 right-0 mt-1 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              {dropdownDisclosure.open && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {projects.length === 0 && (
                     <div className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">No projects</div>
                   )}
@@ -136,7 +127,7 @@ export function ProjectSelector({
                       onMouseDown={() => {
                         setNewProjectName(project.name);
                         setSelectedProjectId(project.id);
-                        setDropdownOpen(false);
+                        dropdownDisclosure.close();
                       }}
                     >
                       <span
@@ -148,9 +139,8 @@ export function ProjectSelector({
                   ))}
                 </div>
               )}
-            </div>
-            {/* Color picker button for new project (if not selecting existing) */}
-            {!existingProject && (
+            {/* Color picker button for new project — only shown when about to create */}
+            {!existingProject && newProjectName.trim() && (
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
@@ -160,20 +150,20 @@ export function ProjectSelector({
                   tabIndex={0}
                   onMouseDown={e => {
                     e.preventDefault();
-                    setShowColorPopover((v) => !v);
+                    newColorDisclosure.toggle();
                   }}
                 >
                   <span className="sr-only">Choose color</span>
                 </button>
-                {showColorPopover && (
+                {newColorDisclosure.open && (
                   <div
-                    ref={colorPopoverRef}
+                    ref={newColorDisclosure.ref}
                     className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg flex flex-col items-center"
                     style={{ minWidth: 180 }}
                     tabIndex={-1}
                     onMouseDown={e => e.preventDefault()}
                   >
-                    <ColorPicker value={newProjectColor} onChange={(c) => { setNewProjectColor(c); setShowColorPopover(false); }} />
+                    <ColorPicker value={newProjectColor} onChange={setNewProjectColor} />
                   </div>
                 )}
               </div>
@@ -191,7 +181,7 @@ export function ProjectSelector({
             {existingProject && (() => {
               const proj = existingProject;
               return (
-                <div className="relative flex-shrink-0" ref={editColorPopoverRef}>
+                <div className="relative flex-shrink-0" ref={editColorDisclosure.ref}>
                   <button
                     type="button"
                     className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
@@ -200,10 +190,10 @@ export function ProjectSelector({
                     aria-label="Edit project color"
                     onMouseDown={e => {
                       e.preventDefault();
-                      setEditColorProjectId(editColorProjectId === proj.id ? null : proj.id);
+                      editColorDisclosure.toggle();
                     }}
                   />
-                  {editColorProjectId === proj.id && (
+                  {editColorDisclosure.open && (
                     <div
                       className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg flex flex-col items-center"
                       style={{ minWidth: 180 }}
@@ -212,7 +202,7 @@ export function ProjectSelector({
                       <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2">Edit project color</p>
                       <ColorPicker
                         value={proj.color ?? DEFAULT_PROJECT_COLOR}
-                        onChange={(c) => { void onUpdateProjectColor(proj.id, c); setEditColorProjectId(null); }}
+                        onChange={(c) => void onUpdateProjectColor(proj.id, c)}
                       />
                     </div>
                   )}
