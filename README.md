@@ -70,7 +70,7 @@ Both values are found in your Supabase project under **Settings → API**.
 2. Copy the contents of [`supabase/schema.sql`](supabase/schema.sql).
 3. Paste into a new query and run it.
 
-This creates the `projects`, `tags`, `time_entries`, `project_tags`, and `entry_tags` tables, enables Row Level Security, and adds `anon`‑role read/write policies suitable for a single‑user setup.
+This creates the `projects`, `tags`, `time_entries`, `project_tags`, and `entry_tags` tables and enables Row Level Security with **per-user isolation** so each account only ever sees its own data.
 
 ---
 
@@ -83,11 +83,19 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 - If the environment variables are missing or invalid you will see a **Setup** screen with instructions.
-- Once configured correctly the **Time Tracker** UI loads automatically.
+- Once configured correctly you will see a **sign-in screen**.
 
 ---
 
-## 6. Other scripts
+## 6. Create your account
+
+Sign up with an email address and password directly in the app. Supabase enables email/password authentication by default on every project — no extra dashboard configuration is needed.
+
+> **Optional:** To enable **Google sign-in** as well, go to **Supabase Dashboard → Authentication → Providers → Google** and follow the setup guide. It is not required for a self-hosted instance.
+
+---
+
+## 7. Other scripts
 
 | Script | Purpose |
 |---|---|
@@ -97,7 +105,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 7. How to use
+## 8. How to use
 
 ### Timer
 1. Optionally type a description and select a project.
@@ -143,6 +151,6 @@ Click **Export CSV** on the Stats tab and choose a preset (current period, this 
 
 ---
 
-## 8. Data storage
+## 9. Data storage
 
 All data lives in your own Supabase project. No analytics or external services are used beyond Supabase itself.

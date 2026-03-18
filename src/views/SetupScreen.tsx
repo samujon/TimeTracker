@@ -57,6 +57,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key`}
             </span>{" "}
             inside the Supabase SQL editor.
           </li>
+          <li>
+            <span className="font-medium text-zinc-900 dark:text-zinc-100">
+              5. Create your account
+            </span>{" "}
+            — once the app is running, a sign-in screen will appear. Sign up
+            with an email address and password. Email/password auth is enabled
+            by default in every Supabase project, so no extra dashboard config
+            is needed.
+          </li>
         </ol>
 
         <p className="mt-6 text-xs text-zinc-400 dark:text-zinc-500">
