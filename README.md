@@ -2,6 +2,8 @@
 
 A minimalist time tracking app built with **Next.js App Router**, **Tailwind CSS v4**, and **Supabase**. Self‑hosted against your own Supabase project — no third‑party tracking, all data in your own database.
 
+Also possible to use https://time-tracker-beryl-nine.vercel.app/ if you don't want to self-host!
+
 ### Features
 
 - **Live timer** — start/stop with a single click; elapsed time shown in real time and in the browser tab title

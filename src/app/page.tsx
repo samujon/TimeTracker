@@ -6,22 +6,7 @@ import { EditorView } from "@/views/EditorView";
 import { useTheme } from "@/hooks/useTheme";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { AuthGate } from "@/components/AuthGate";
-import { useUser } from "@/context/UserContext";
-
-function UserBar() {
-  const { user, signOut } = useUser();
-  return (
-    <div className="flex items-center justify-end gap-3 mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-      <span className="truncate max-w-[200px]">{user?.email}</span>
-      <button
-        onClick={signOut}
-        className="rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-colors"
-      >
-        Sign out
-      </button>
-    </div>
-  );
-}
+import { UserBar } from "@/components/UserBar";
 
 export default function Home() {
   const [tab, setTab] = useState<"tracker" | "stats" | "editor">("tracker");
@@ -75,8 +60,8 @@ export default function Home() {
                 <button
                   onClick={toggleTheme}
                   className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  aria-label={theme === 'dark' ? 'Dark mode' : 'Light mode'}
-                  title={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                   {theme === 'dark' ? '🌙 Dark mode' : '☀ Light mode'}
                 </button>
@@ -93,8 +78,8 @@ export default function Home() {
                 <button
                   onClick={toggleTheme}
                   className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  aria-label={theme === 'dark' ? 'Dark mode' : 'Light mode'}
-                  title={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                   {theme === 'dark' ? '🌙 Dark mode' : '☀ Light mode'}
                 </button>

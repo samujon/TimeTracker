@@ -8,12 +8,22 @@ interface UserContextValue {
   signOut: () => Promise<void>;
 }
 
-export const UserContext = createContext<UserContextValue>({
-  user: null,
-  signOut: async () => {},
-});
+// Sentinel: null means the context has never been provided (hook used outside AuthGate).
+const UserContext = createContext<UserContextValue | null>(null);
 
-/** Access the authenticated user and signOut helper from any client component. */
+export { UserContext };
+
+/**
+ * Access the authenticated user and signOut helper from any client component.
+ * Must be called within a component tree wrapped by <AuthGate>.
+ */
 export function useUser(): UserContextValue {
-  return useContext(UserContext);
+  const ctx = useContext(UserContext);
+  if (ctx === null) {
+    throw new Error(
+      "useUser() was called outside of <AuthGate>. " +
+      "Wrap the component tree with <AuthGate> to provide UserContext."
+    );
+  }
+  return ctx;
 }

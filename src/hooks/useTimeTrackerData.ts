@@ -13,14 +13,11 @@ export interface TimeTrackerData {
     setError: (msg: string | null) => void;
 
     entries: TimeEntry[];
-    setEntries: React.Dispatch<React.SetStateAction<TimeEntry[]>>;
     loadEntries: () => Promise<void>;
 
     projects: Project[];
-    setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
 
     tags: Tag[];
-    setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
 
     selectedProjectId: string;
     setSelectedProjectId: (id: string) => void;
@@ -33,7 +30,14 @@ export interface TimeTrackerData {
 
     creatingProject: boolean;
 
-    insertEntryTags: (entryId: string, tagIds: string[]) => Promise<Tag[]>;
+    /** Create a new time entry, insert its tags, and prepend it to the entries list. */
+    handleCreateEntry: (params: {
+        description: string | null;
+        projectId: string | null;
+        startedAt: Date;
+        endedAt: Date;
+        tagIds: string[];
+    }) => Promise<boolean>;
 
     handleDeleteEntry: (id: string) => Promise<void>;
     handleCreateProject: (e: React.FormEvent) => Promise<void>;
@@ -237,7 +241,11 @@ export function useTimeTrackerData(): TimeTrackerData {
 
     const handleUpdateProjectTags = async (projectId: string, tagIds: string[]) => {
         setError(null);
-        await db.from("project_tags").delete().eq("project_id", projectId);
+        const { error: deleteErr } = await db.from("project_tags").delete().eq("project_id", projectId);
+        if (deleteErr) {
+            setError(deleteErr.message);
+            return;
+        }
         if (tagIds.length > 0) {
             const { error: err } = await db
                 .from("project_tags")
@@ -285,6 +293,7 @@ export function useTimeTrackerData(): TimeTrackerData {
         ended_at: string;
         entry_tag_ids: string[];
     }) => {
+        setError(null);
         const { data, error: err } = await db
             .from("time_entries")
             .update({
@@ -324,17 +333,65 @@ export function useTimeTrackerData(): TimeTrackerData {
         }
     };
 
+    const handleCreateEntry = async (params: {
+        description: string | null;
+        projectId: string | null;
+        startedAt: Date;
+        endedAt: Date;
+        tagIds: string[];
+    }): Promise<boolean> => {
+        if (!user) return false;
+        setError(null);
+        const durationSeconds = Math.floor(
+            (params.endedAt.getTime() - params.startedAt.getTime()) / 1000
+        );
+        const { data, error: err } = await db
+            .from("time_entries")
+            .insert({
+                description: params.description,
+                project_id: params.projectId,
+                started_at: params.startedAt.toISOString(),
+                ended_at: params.endedAt.toISOString(),
+                duration_seconds: durationSeconds,
+                user_id: user.id,
+            })
+            .select(
+                "id, description, project_id, started_at, ended_at, duration_seconds, " +
+                "projects(name, color), entry_tags(tags(id, name, color))"
+            )
+            .single();
+
+        if (err) {
+            setError(err.message);
+            return false;
+        }
+
+        if (data) {
+            const entryId = (data as unknown as Record<string, unknown>).id as string;
+            const entryTags = await insertEntryTags(entryId, params.tagIds);
+            setEntries((prev) =>
+                [
+                    {
+                        ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
+                        ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
+                        entry_tags: entryTags,
+                    },
+                    ...prev,
+                ].slice(0, MAX_RECENT_ENTRIES)
+            );
+        }
+
+        return true;
+    };
+
     return {
         loading,
         error,
         setError,
         entries,
-        setEntries,
         loadEntries,
         projects,
-        setProjects,
         tags,
-        setTags,
         selectedProjectId,
         setSelectedProjectId,
         newProjectName,
@@ -342,7 +399,7 @@ export function useTimeTrackerData(): TimeTrackerData {
         newProjectColor,
         setNewProjectColor,
         creatingProject,
-        insertEntryTags,
+        handleCreateEntry,
         handleDeleteEntry,
         handleCreateProject,
         handleCreateTag,

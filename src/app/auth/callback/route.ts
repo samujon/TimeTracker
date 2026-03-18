@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}/`);
     }
+    // Exchange failed — redirect with an error flag so the UI can inform the user
+    return NextResponse.redirect(`${origin}/?error=auth_callback_failed`);
   }
 
-  // Something went wrong — redirect to root so the auth gate shows sign-in
+  // No code present — redirect to root
   return NextResponse.redirect(`${origin}/`);
 }

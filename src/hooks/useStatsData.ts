@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { getPeriodRange } from "@/lib/timeUtils";
+import type { StatsView } from "@/lib/timeUtils";
 import { useUser } from "@/context/UserContext";
 import type { Tag } from "@/types";
 
-export type StatsView = "daily" | "weekly" | "monthly";
+// Re-export the canonical StatsView type from timeUtils so that components
+// importing from this hook continue to work without source changes.
+export type { StatsView } from "@/lib/timeUtils";
 export type StatsGroup = "period" | "task";
 
 export type StatsEntry = {

@@ -4,10 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 /**
  * Refreshes the Supabase session cookie on every request so that the
  * JWT never silently expires during an active browser session.
- * Auth gating is handled client-side in AuthGate.tsx — this middleware
+ * Auth gating is handled client-side in AuthGate.tsx — this proxy
  * only manages session tokens.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });
 
   const supabase = createServerClient(

@@ -545,7 +545,7 @@ function EntryRow({
                 style={{
                   backgroundColor: tag.color ? tag.color + "22" : "#6366f122",
                   color: tag.color ?? "#6366f1",
-                  ...(inherited ? { ringColor: tag.color ?? "#6366f1" } : {}),
+                  ...(inherited ? { outline: `1px solid ${tag.color ?? "#6366f1"}`, outlineOffset: "-1px" } : {}),
                 }}
               >
                 <span

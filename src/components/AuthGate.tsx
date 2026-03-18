@@ -20,9 +20,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    // Initial auth check — getUser() validates the JWT with the Supabase
+    // server rather than trusting the local storage value (as getSession() does).
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user ?? null);
       setLoading(false);
     });
 

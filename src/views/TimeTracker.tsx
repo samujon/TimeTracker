@@ -3,10 +3,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
+import { hasSupabaseEnv } from "@/lib/supabaseClient";
 import { useTimeTrackerData } from "@/hooks/useTimeTrackerData";
 import { SetupScreen } from "./SetupScreen";
-import { useUser } from "@/context/UserContext";
 import { useTimer } from "@/hooks/useTimer";
 import { ProjectSelector } from "@/components/tracker/ProjectSelector";
 import { TimerSection } from "@/components/tracker/TimerSection";
@@ -14,12 +13,11 @@ import { ManualEntryForm } from "@/components/tracker/ManualEntryForm";
 import { RecentEntries } from "@/components/tracker/RecentEntries";
 import { EditEntryModal } from "@/components/shared/EditEntryModal";
 import type { TimeEntry } from "@/types";
-import { buildHourOptions, formatLocalDate, formatLocalTime, extractProjectFields } from "@/lib/timeUtils";
+import { buildHourOptions, formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
 import type { Theme } from "@/hooks/useTheme";
 
 export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   const { isRunning, startedAt, formattedElapsed, start: timerStart, stop: timerStop, reset: timerReset } = useTimer();
-  const { user } = useUser();
 
   const hourOptions = useMemo(() => buildHourOptions(), []);
 
@@ -34,14 +32,13 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
   const [manualDescription, setManualDescription] = useState("");
   const [manualSaving, setManualSaving] = useState(false);
 
-  const [selectedEntryTagIds, setSelectedEntryTagIds] = useState<string[]>([]);
+  const [timerTagIds, setTimerTagIds] = useState<string[]>([]);
 
   const {
     loading,
     error,
     setError,
     entries,
-    setEntries,
     projects,
     tags,
     selectedProjectId,
@@ -51,7 +48,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     newProjectColor,
     setNewProjectColor,
     creatingProject,
-    insertEntryTags,
+    handleCreateEntry,
     handleDeleteEntry,
     handleCreateProject,
     handleCreateTag,
@@ -102,46 +99,17 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
 
     timerStop();
     setSaving(true);
-    setError(null);
 
-    const endedAt = new Date();
-    const durationSeconds = Math.floor((endedAt.getTime() - capturedStartedAt.getTime()) / 1000);
-    const selectedProject = projects.find((p) => p.id === selectedProjectId);
+    const success = await handleCreateEntry({
+      description: description || null,
+      projectId: selectedProjectId || null,
+      startedAt: capturedStartedAt,
+      endedAt: new Date(),
+      tagIds: timerTagIds,
+    });
 
-    const supabase = getSupabaseClient()!;
-
-    const { data, error: err } = await supabase
-      .from("time_entries")
-      .insert({
-        description: description || null,
-        project_id: selectedProject?.id ?? null,
-        started_at: capturedStartedAt.toISOString(),
-        ended_at: endedAt.toISOString(),
-        duration_seconds: durationSeconds,
-        user_id: user?.id,
-      })
-      .select(
-        "id, description, project_id, started_at, ended_at, duration_seconds, " +
-        "projects(name, color), entry_tags(tags(id, name, color))"
-      )
-      .single();
-
-    if (err) {
-      setError(err.message);
-    } else if (data) {
-      const entryId = (data as unknown as Record<string, unknown>).id as string;
-      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
-      setEntries((prev) =>
-        [
-          {
-            ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
-            ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
-            entry_tags: entryTags,
-          },
-          ...prev,
-        ].slice(0, 50)
-      );
-      setSelectedEntryTagIds([]);
+    if (success) {
+      setTimerTagIds([]);
     }
 
     setSaving(false);
@@ -176,48 +144,22 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
     }
 
     const durationSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
-    const selectedProject = projects.find((p) => p.id === selectedProjectId);
     setManualSaving(true);
 
-    const supabase = getSupabaseClient()!;
+    const success = await handleCreateEntry({
+      description: manualDescription || null,
+      projectId: selectedProjectId || null,
+      startedAt: start,
+      endedAt: end,
+      tagIds: [],
+    });
 
-    const { data, error: err } = await supabase
-      .from("time_entries")
-      .insert({
-        description: manualDescription || null,
-        project_id: selectedProject?.id ?? null,
-        started_at: start.toISOString(),
-        ended_at: end.toISOString(),
-        duration_seconds: durationSeconds,
-        user_id: user?.id,
-      })
-      .select(
-        "id, description, project_id, started_at, ended_at, duration_seconds, " +
-        "projects(name, color), entry_tags(tags(id, name, color))"
-      )
-      .single();
-
-    if (err) {
-      setError(err.message);
-    } else if (data) {
-      const entryId = (data as unknown as Record<string, unknown>).id as string;
-      const entryTags = await insertEntryTags(entryId, selectedEntryTagIds);
-      setEntries((prev) =>
-        [
-          {
-            ...(data as unknown as Omit<TimeEntry, "project_name" | "project_color" | "entry_tags">),
-            ...extractProjectFields((data as unknown as Record<string, unknown>).projects),
-            entry_tags: entryTags,
-          },
-          ...prev,
-        ].slice(0, 50)
-      );
+    if (success) {
       setManualDescription("");
       setManualDate(formatLocalDate(new Date()));
       setManualStartTime("");
       setManualEndTime("");
       setManualDuration("");
-      setSelectedEntryTagIds([]);
     }
 
     setManualSaving(false);
@@ -262,8 +204,8 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         <button
           onClick={toggleTheme}
           className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-          aria-label={theme === 'dark' ? 'Dark mode' : 'Light mode'}
-          title={theme === 'dark' ? 'Dark mode' : 'Light mode'}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {theme === 'dark' ? '🌙 Dark mode' : '☀ Light mode'}
         </button>
@@ -299,8 +241,8 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
             description={description}
             setDescription={setDescription}
             tags={tags}
-            selectedEntryTagIds={selectedEntryTagIds}
-            setSelectedEntryTagIds={setSelectedEntryTagIds}
+            selectedEntryTagIds={timerTagIds}
+            setSelectedEntryTagIds={setTimerTagIds}
             onToggle={handleToggle}
             onCreateTag={handleCreateTag}
             onDeleteTag={handleDeleteTag}
