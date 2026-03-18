@@ -61,6 +61,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <Auth
             supabaseClient={supabase}
             providers={["google"]}
+            queryParams={{ prompt: "select_account" }}
             redirectTo={
               typeof window !== "undefined"
                 ? `${window.location.origin}/auth/callback`
