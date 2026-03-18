@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
+import { SetupScreen } from "@/views/SetupScreen";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { fetchExportData } from "@/lib/exportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
-import { SetupScreen } from "./SetupScreen";
 import { EditEntryModal } from "@/components/shared/EditEntryModal";
 import type { TimeEntry, Project, Tag } from "@/types";
 import {

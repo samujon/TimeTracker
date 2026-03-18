@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { useTimeTrackerData } from "@/hooks/useTimeTrackerData";
-import { SetupScreen } from "./SetupScreen";
+import { SetupScreen } from "@/views/SetupScreen";
 import { useTimer } from "@/hooks/useTimer";
 import { ProjectSelector } from "@/components/tracker/ProjectSelector";
 import { TimerSection } from "@/components/tracker/TimerSection";
