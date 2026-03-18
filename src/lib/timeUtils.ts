@@ -34,7 +34,9 @@ export function parseDuration(str: string): number | null {
     // "1h 15m", "90m", "2h", etc.
     const regex = /(?:(\d+)\s*h)?\s*(?:(\d+)\s*m?)?/i;
     const match = str.match(regex);
-    if (!match) return null;
+    // Both capture groups are optional, so the regex matches any string.
+    // Require at least one group to have actually matched a digit.
+    if (!match || (!match[1] && !match[2])) return null;
     const hours = match[1] ? parseInt(match[1], 10) : 0;
     const mins = match[2] ? parseInt(match[2], 10) : 0;
     if (isNaN(hours) && isNaN(mins)) return null;
@@ -146,14 +148,14 @@ export function toggleArrayId(arr: string[], id: string): string[] {
     return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
 }
 
-/** View granularity used by the stats chart. */
-export type StatsPeriodView = "daily" | "weekly" | "monthly";
+/** View granularity used by the stats chart and data hooks. */
+export type StatsView = "daily" | "weekly" | "monthly";
 
 /**
  * Returns the anchor date for the period immediately before the given one.
  * daily → 1 day back, weekly → 7 days back, monthly → 1 month back.
  */
-export function getPreviousPeriodDate(view: StatsPeriodView, date: Date): Date {
+export function getPreviousPeriodDate(view: StatsView, date: Date): Date {
     const d = new Date(date);
     if (view === "daily") {
         d.setDate(d.getDate() - 1);
@@ -169,7 +171,7 @@ export function getPreviousPeriodDate(view: StatsPeriodView, date: Date): Date {
  * Calculates the [from, to) date range for a given stats-view + anchor date,
  * using ISO 8601 weeks (Monday = first day of week).
  */
-export function getPeriodRange(view: StatsPeriodView, date: Date): { from: Date; to: Date } {
+export function getPeriodRange(view: StatsView, date: Date): { from: Date; to: Date } {
     let from: Date;
     let to: Date;
 

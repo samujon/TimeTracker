@@ -20,9 +20,9 @@
 
 ## Long term (fun for learning)
 
-- [ ] **Auth** — Supabase Auth (email/Google) with Row Level Security so each user only sees their own data
+- [x] **Auth** — Supabase Auth (email/Google) with Row Level Security so each user only sees their own data
 - [ ] **Workspaces/teams** — shared projects across team members, visibility controls
 - [ ] **Invite flow** — owner invites members to a workspace
 - [ ] **Self-hosted installer** — a `docker-compose.yml` bundling the Next.js app + Supabase for one-command VPS deployment
-- [ ] **Public hosted version** — deploy to Vercel + Supabase cloud as the zero-setup option alongside the self-hosted path
+- [x] **Public hosted version** — deploy to Vercel + Supabase cloud as the zero-setup option alongside the self-hosted path
 - [ ] **API / integrations** — REST or webhook endpoints so entries can be posted from CLI tools, browser extensions, or Zapier

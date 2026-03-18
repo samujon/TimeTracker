@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useStatsExport } from "@/hooks/useStatsExport";
 import { getSupabaseClient } from "@/lib/supabaseClient";
+import { useUser } from "@/context/UserContext";
 import type { Tag } from "@/types";
 import { useStatsData } from "@/hooks/useStatsData";
 import type { StatsView as StatsViewType, StatsGroup } from "@/hooks/useStatsData";
@@ -29,6 +30,7 @@ export function StatsView() {
     const [groupBy, setGroupBy] = useState<StatsGroup>("period");
     const [allTags, setAllTags] = useState<Tag[]>([]);
     const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+    const { user } = useUser();
 
     const statsExport = useStatsExport(view, selectedDate);
 
@@ -42,15 +44,16 @@ export function StatsView() {
 
     useEffect(() => {
         const supabase = getSupabaseClient();
-        if (!supabase) return;
+        if (!supabase || !user) return;
         void supabase
             .from("tags")
             .select("id, name, color")
+            .eq("user_id", user.id)
             .order("created_at", { ascending: true })
             .then(({ data }) => {
                 if (data) setAllTags(data as Tag[]);
             });
-    }, []);
+    }, [user?.id]);
 
     return (
         <div className="space-y-4">

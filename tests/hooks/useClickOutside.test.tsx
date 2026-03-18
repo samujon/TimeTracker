@@ -43,7 +43,7 @@ describe('useClickOutside', () => {
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('does NOT call onClose multiple times for consecutive outside clicks', () => {
+    it('calls onClose for each consecutive outside click', () => {
         const onClose = jest.fn();
         const { getByTestId } = render(<Fixture onClose={onClose} />);
 

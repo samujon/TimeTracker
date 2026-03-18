@@ -38,6 +38,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+        aria-label="Pick a custom colour"
         title="Pick a custom colour"
         style={{ minWidth: 32 }}
       />

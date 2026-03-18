@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { getPeriodRange } from "@/lib/timeUtils";
+import type { StatsView } from "@/lib/timeUtils";
+import { useUser } from "@/context/UserContext";
 import type { Tag } from "@/types";
 
-export type StatsView = "daily" | "weekly" | "monthly";
+// Re-export the canonical StatsView type from timeUtils so that components
+// importing from this hook continue to work without source changes.
+export type { StatsView } from "@/lib/timeUtils";
 export type StatsGroup = "period" | "task";
 
 export type StatsEntry = {
@@ -33,6 +37,7 @@ export function useStatsData(
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StatsEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
   // Stable key for the filter set — avoids re-fetching when a new array
   // reference is passed with the same contents.
@@ -45,6 +50,10 @@ export function useStatsData(
     const supabase = getSupabaseClient();
     if (!supabase) {
       setError("Supabase not configured");
+      setLoading(false);
+      return;
+    }
+    if (!user) {
       setLoading(false);
       return;
     }
@@ -66,6 +75,7 @@ export function useStatsData(
           "projects(name, color, project_tags(tag_id, tags(id, name, color))), " +
           "entry_tags(tag_id, tags(id, name, color))"
         )
+        .eq("user_id", user.id)
         .gte("started_at", from.toISOString())
         .lt("started_at", to.toISOString());
 
@@ -105,7 +115,7 @@ export function useStatsData(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, selectedDate, filterKey]); // groupBy intentionally omitted — not used in query
+  }, [view, selectedDate, filterKey, user?.id]); // groupBy intentionally omitted — not used in query
 
   return { loading, data, error };
 }
