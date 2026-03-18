@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { extractProjectFields, extractTagsFromJoin } from "@/lib/timeUtils";
 import { MAX_RECENT_ENTRIES, DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import { useUser } from "@/context/UserContext";
 import type { TimeEntry, Project, Tag } from "@/types";
 
 export interface TimeTrackerData {
@@ -54,6 +55,7 @@ export interface TimeTrackerData {
 
 export function useTimeTrackerData(): TimeTrackerData {
     const supabase = getSupabaseClient();
+    const { user } = useUser();
     // db is supabase with non-null assertion; only used in callbacks that are
     // only reachable when supabase is available (guarded by <SetupScreen />).
     const db = supabase!;
@@ -69,7 +71,7 @@ export function useTimeTrackerData(): TimeTrackerData {
     const [creatingProject, setCreatingProject] = useState(false);
 
     const loadEntries = useCallback(async () => {
-        if (!supabase) return;
+        if (!supabase || !user) return;
         const { data, error: err } = await db
             .from("time_entries")
             .select(
@@ -77,6 +79,7 @@ export function useTimeTrackerData(): TimeTrackerData {
                 "projects(name, color), " +
                 "entry_tags(tags(id, name, color))"
             )
+            .eq("user_id", user.id)
             .order("started_at", { ascending: false })
             .limit(MAX_RECENT_ENTRIES);
 
@@ -91,7 +94,7 @@ export function useTimeTrackerData(): TimeTrackerData {
                 }))
             );
         }
-    }, [supabase]);
+    }, [supabase, user]);
 
     useEffect(() => {
         void loadEntries();
@@ -99,15 +102,17 @@ export function useTimeTrackerData(): TimeTrackerData {
 
     useEffect(() => {
         const loadProjectsAndTags = async () => {
-            if (!supabase) return;
+            if (!supabase || !user) return;
             const [projectsResult, tagsResult] = await Promise.all([
                 supabase
                     .from("projects")
                     .select("id, name, color, project_tags(tags(id, name, color))")
+                    .eq("user_id", user.id)
                     .order("created_at", { ascending: true }),
                 supabase
                     .from("tags")
                     .select("id, name, color")
+                    .eq("user_id", user.id)
                     .order("created_at", { ascending: true }),
             ]);
 
@@ -132,7 +137,7 @@ export function useTimeTrackerData(): TimeTrackerData {
         };
 
         void loadProjectsAndTags();
-    }, [supabase]);
+    }, [supabase, user]);
 
     async function insertEntryTags(entryId: string, tagIds: string[]): Promise<Tag[]> {
         if (tagIds.length === 0 || !supabase) return [];
@@ -159,14 +164,14 @@ export function useTimeTrackerData(): TimeTrackerData {
     const handleCreateProject = async (e: React.FormEvent) => {
         e.preventDefault();
         const name = newProjectName.trim();
-        if (!name) return;
+        if (!name || !user) return;
 
         setCreatingProject(true);
         setError(null);
 
         const { data, error: err } = await db
             .from("projects")
-            .insert({ name, color: newProjectColor })
+            .insert({ name, color: newProjectColor, user_id: user.id })
             .select("id, name, color")
             .single();
 
@@ -184,10 +189,11 @@ export function useTimeTrackerData(): TimeTrackerData {
     };
 
     const handleCreateTag = async (name: string, color: string) => {
+        if (!user) return;
         setError(null);
         const { data, error: err } = await db
             .from("tags")
-            .insert({ name, color })
+            .insert({ name, color, user_id: user.id })
             .select("id, name, color")
             .single();
         if (err) {

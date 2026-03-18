@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { formatLocalDate } from "@/lib/timeUtils";
+import { useUser } from "@/context/UserContext";
 
 export type DailyMap = Map<string, number>; // "YYYY-MM-DD" → total seconds
 
@@ -68,10 +69,15 @@ export function useHistoryData() {
     const [currentStreak, setCurrentStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
     const [longestStreakThisYear, setLongestStreakThisYear] = useState(0);
+    const { user } = useUser();
 
     useEffect(() => {
         const supabase = getSupabaseClient();
         if (!supabase) {
+            setLoading(false);
+            return;
+        }
+        if (!user) {
             setLoading(false);
             return;
         }
@@ -85,6 +91,7 @@ export function useHistoryData() {
             const { data: rows } = await supabase
                 .from("time_entries")
                 .select("started_at, duration_seconds")
+                .eq("user_id", user.id)
                 .gte("started_at", from.toISOString());
 
             if (cancelled) return;
@@ -111,7 +118,7 @@ export function useHistoryData() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [user?.id]);
 
     return { loading, dailyMap, currentStreak, longestStreak, longestStreakThisYear };
 }

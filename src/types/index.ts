@@ -4,10 +4,12 @@ export type Tag = {
     id: string;
     name: string;
     color?: string | null;
+    user_id?: string;
 };
 
 export type TimeEntry = {
     id: string;
+    user_id?: string;
     description: string | null;
     project_id: string | null;
     project_name?: string | null;
@@ -21,6 +23,7 @@ export type TimeEntry = {
 
 export type Project = {
     id: string;
+    user_id?: string;
     name: string;
     color?: string | null;
     /** Tags assigned to this project — inherited by all its entries. */

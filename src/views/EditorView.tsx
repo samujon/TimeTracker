@@ -7,6 +7,7 @@ import { fetchExportData } from "@/lib/exportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
 import { SetupScreen } from "./SetupScreen";
 import { EditEntryModal } from "@/components/shared/EditEntryModal";
+import { useUser } from "@/context/UserContext";
 import type { TimeEntry, Project, Tag } from "@/types";
 import {
   extractProjectFields,
@@ -23,6 +24,7 @@ const PAGE_SIZE = 25;
 
 export function EditorView() {
   const supabase = getSupabaseClient();
+  const { user } = useUser();
 
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -68,7 +70,7 @@ export function EditorView() {
     setExportLoading(true);
     setExportError(null);
     try {
-      const rows = await fetchExportData(preset.from, preset.to);
+      const rows = await fetchExportData(preset.from, preset.to, user?.id);
       if (rows.length === 0) {
         setExportError("No entries found for that period.");
       } else {
@@ -88,11 +90,11 @@ export function EditorView() {
 
   // ─── Initial data load ────────────────────────────────────────────────────
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !user) return;
     void loadInitial();
     void loadProjectsAndTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase]);
+  }, [supabase, user?.id]);
 
   async function loadInitial() {
     setLoading(true);
@@ -109,6 +111,7 @@ export function EditorView() {
           "entry_tags(tags(id, name, color))",
         { count: "exact" }
       )
+      .eq("user_id", user!.id)
       .order("started_at", { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1);
 
@@ -128,8 +131,9 @@ export function EditorView() {
       supabase!
         .from("projects")
         .select("id, name, color, project_tags(tags(id, name, color))")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: true }),
-      supabase!.from("tags").select("id, name, color").order("created_at", { ascending: true }),
+      supabase!.from("tags").select("id, name, color").eq("user_id", user!.id).order("created_at", { ascending: true }),
     ]);
 
     if (!pr.error) {
@@ -253,7 +257,7 @@ export function EditorView() {
   async function handleCreateTag(name: string, color: string) {
     const { data, error: err } = await supabase!
       .from("tags")
-      .insert({ name, color })
+      .insert({ name, color, user_id: user!.id })
       .select("id, name, color")
       .single();
     if (err) setError(err.message);

@@ -5,6 +5,7 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { fetchExportData } from "@/lib/exportData";
 import { generateCSV, downloadCSV } from "@/lib/csvUtils";
 import { getPeriodRange, getISOWeek, getISOWeekYear, getPreviousPeriodDate } from "@/lib/timeUtils";
+import { useUser } from "@/context/UserContext";
 import type { StatsView } from "@/hooks/useStatsData";
 
 export type ExportPreset = {
@@ -89,6 +90,7 @@ export function useStatsExport(view: StatsView, selectedDate: Date): StatsExport
     const [exportOpen, setExportOpen] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
+    const { user } = useUser();
 
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const closeDropdown = useCallback(() => setExportOpen(false), []);
@@ -101,7 +103,7 @@ export function useStatsExport(view: StatsView, selectedDate: Date): StatsExport
         setExportLoading(true);
         setExportError(null);
         try {
-            const rows = await fetchExportData(preset.from, preset.to);
+            const rows = await fetchExportData(preset.from, preset.to, user?.id);
             if (rows.length === 0) {
                 setExportError("No entries found for that period.");
             } else {

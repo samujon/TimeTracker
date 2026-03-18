@@ -8,10 +8,12 @@ import type { ExportRow } from "@/types";
  * `ExportRow` objects ready for CSV generation.
  *
  * Pass `null` for `from` and/or `to` to skip that bound (i.e. "all time").
+ * Pass `userId` to scope results to a specific authenticated user.
  */
 export async function fetchExportData(
     from: string | null,
-    to: string | null
+    to: string | null,
+    userId?: string
 ): Promise<ExportRow[]> {
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error("Supabase not configured");
@@ -21,6 +23,7 @@ export async function fetchExportData(
         .select("id, description, project_id, started_at, ended_at, duration_seconds, projects(name)")
         .order("started_at", { ascending: true });
 
+    if (userId) query = query.eq("user_id", userId);
     if (from) query = query.gte("started_at", from);
     if (to) query = query.lt("started_at", to);
 

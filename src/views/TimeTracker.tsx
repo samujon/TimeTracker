@@ -6,6 +6,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { hasSupabaseEnv, getSupabaseClient } from "@/lib/supabaseClient";
 import { useTimeTrackerData } from "@/hooks/useTimeTrackerData";
 import { SetupScreen } from "./SetupScreen";
+import { useUser } from "@/context/UserContext";
 import { useTimer } from "@/hooks/useTimer";
 import { ProjectSelector } from "@/components/tracker/ProjectSelector";
 import { TimerSection } from "@/components/tracker/TimerSection";
@@ -18,6 +19,7 @@ import type { Theme } from "@/hooks/useTheme";
 
 export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
   const { isRunning, startedAt, formattedElapsed, start: timerStart, stop: timerStop, reset: timerReset } = useTimer();
+  const { user } = useUser();
 
   const hourOptions = useMemo(() => buildHourOptions(), []);
 
@@ -116,6 +118,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         started_at: capturedStartedAt.toISOString(),
         ended_at: endedAt.toISOString(),
         duration_seconds: durationSeconds,
+        user_id: user?.id,
       })
       .select(
         "id, description, project_id, started_at, ended_at, duration_seconds, " +
@@ -186,6 +189,7 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
         started_at: start.toISOString(),
         ended_at: end.toISOString(),
         duration_seconds: durationSeconds,
+        user_id: user?.id,
       })
       .select(
         "id, description, project_id, started_at, ended_at, duration_seconds, " +
