@@ -51,8 +51,8 @@ function fmtMinutes(mins: number): string {
 export default function StatsChart({ view, selectedDate, groupBy, loading, data, error }: Props) {
   const { theme } = useTheme();
 
-  const tickColor = theme === "dark" ? "#a1a1aa" : "#52525b";
-  const gridColor = theme === "dark" ? "#27272a" : "#e4e4e7";
+  const tickColor = theme === "dark" ? "#94a3b8" : "#64748b";
+  const gridColor = theme === "dark" ? "#1e293b" : "#e2e8f0";
 
   const { labels, datasets } = useMemo(() => {
     // Build a map of all unique projects in the returned data.
@@ -185,9 +185,9 @@ export default function StatsChart({ view, selectedDate, groupBy, loading, data,
     },
   };
 
-  if (loading) return <div className="text-zinc-400 text-sm">Loading…</div>;
-  if (error) return <div className="text-rose-400 text-sm">{error}</div>;
-  if (!labels.length) return <div className="text-zinc-500 text-sm">No data for this period.</div>;
+  if (loading) return <div className="text-[var(--color-text-muted)] text-sm">Loading…</div>;
+  if (error) return <div className="text-[var(--color-destructive)] text-sm">{error}</div>;
+  if (!labels.length) return <div className="text-[var(--color-text-muted)] text-sm">No data for this period.</div>;
 
   if (groupBy === "task") {
     const donutOptions = {

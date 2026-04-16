@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardDocumentIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Clipboard, Pencil, Trash2 } from "lucide-react";
 import type { TimeEntry, Project } from "@/types";
 import { computeEffectiveTags } from "@/lib/timeUtils";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
@@ -29,19 +29,30 @@ export function RecentEntries({ entries, projects, onDeleteEntry, onEditEntry, o
   }
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Recent entries</h2>
-        <span className="text-[11px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">Recent entries</h2>
+        <span className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
           Last 10
         </span>
       </div>
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+      <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
         {entries.length === 0 ? (
-          <div className="px-4 py-6 text-xs text-zinc-400 dark:text-zinc-500">
+          <div className="px-4 py-6 text-xs text-[var(--color-text-muted)]">
             No entries yet. Start the timer to create your first one.
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-secondary)]">Project</th>
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Description</th>
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Tags</th>
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-secondary)]">Time</th>
+                <th className="px-3 py-2 text-right font-medium text-[var(--color-text-secondary)]">Duration</th>
+                <th className="px-3 py-2 text-right font-medium text-[var(--color-text-secondary)] sr-only">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border-subtle)]">
             {entries.map((entry) => {
               const started = new Date(entry.started_at);
               const ended = entry.ended_at ? new Date(entry.ended_at) : null;
@@ -67,115 +78,116 @@ export function RecentEntries({ entries, projects, onDeleteEntry, onEditEntry, o
               const inheritedTagIds = new Set((project?.tags ?? []).map((t) => t.id));
 
               return (
-                <li
+                <tr
                   key={entry.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
+                  className="group hover:bg-[var(--color-surface-alt)] transition-colors"
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-1.5">
                       {entry.project_color && (
                         <span
-                          className="inline-block h-3 w-3 rounded-full border border-zinc-300 dark:border-zinc-700"
+                          className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0"
                           style={{ backgroundColor: entry.project_color }}
-                          title="Project color"
                         />
                       )}
-                      <p className="truncate text-zinc-900 dark:text-zinc-100 font-medium">
-                        {entry.project_name || "Untitled project"}
-                      </p>
+                      <span className="text-[var(--color-text)] font-medium truncate max-w-[120px]">
+                        {entry.project_name || "Untitled"}
+                      </span>
                     </div>
                     {entry.description?.trim() && (
-                      <p className="truncate text-zinc-500 dark:text-zinc-400 text-xs mt-0.5">
+                      <p className="truncate text-[var(--color-text-muted)] text-[10px] mt-0.5 sm:hidden">
                         {entry.description}
                       </p>
                     )}
+                  </td>
+                  <td className="px-3 py-2 hidden sm:table-cell text-[var(--color-text-secondary)] max-w-[160px] truncate">
+                    {entry.description || <span className="text-[var(--color-text-muted)] italic">—</span>}
+                  </td>
+                  <td className="px-3 py-2 hidden sm:table-cell">
                     {effectiveTags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="flex flex-wrap gap-1">
                         {effectiveTags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-zinc-950"
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
                             style={{
-                              backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR,
-                              opacity: inheritedTagIds.has(tag.id) ? 0.75 : 1,
+                              backgroundColor: tag.color ? tag.color + "22" : "#6366f122",
+                              color: tag.color ?? "#6366f1",
+                              opacity: inheritedTagIds.has(tag.id) ? 0.6 : 1,
                             }}
-                            title={inheritedTagIds.has(tag.id) ? "Inherited from project" : "Entry tag"}
                           >
                             {tag.name}
                           </span>
                         ))}
                       </div>
                     )}
-                    <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
-                      {started.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
-                      {ended && (
-                        <>
-                          {" → "}
-                          {ended.toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="shrink-0 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1 font-mono text-[11px] tabular-nums text-zinc-700 dark:text-zinc-200">
+                  </td>
+                  <td className="px-3 py-2 text-[var(--color-text-muted)] whitespace-nowrap tabular-nums">
+                    {started.toLocaleString("sv-SE", { timeStyle: "short" })}
+                    {ended && ` – ${ended.toLocaleString("sv-SE", { timeStyle: "short" })}`}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <span className="font-mono tabular-nums text-[var(--color-text)]">
                       {hours}:{minutes}:{seconds}
                     </span>
-                    {onCopyToManual && (
-                      <button
-                        type="button"
-                        onClick={() => onCopyToManual(entry)}
-                        className="rounded bg-blue-700 p-2 text-xs text-white hover:bg-blue-600"
-                        title="Copy to manual entry"
-                        aria-label="Copy"
-                      >
-                        <ClipboardDocumentIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                    {onEditEntry && (
-                      <button
-                        type="button"
-                        onClick={() => onEditEntry(entry)}
-                        className="rounded bg-emerald-700 p-2 text-xs text-white hover:bg-emerald-600"
-                        title="Edit entry"
-                        aria-label="Edit"
-                      >
-                        <PencilSquareIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                    {onDeleteEntry && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteClick(entry.id)}
-                        className="rounded bg-rose-600 p-2 text-xs text-white hover:bg-rose-500"
-                        title="Delete entry"
-                        aria-label="Delete"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                  </div>
-                </li>
+                  </td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {onCopyToManual && (
+                        <button
+                          type="button"
+                          onClick={() => onCopyToManual(entry)}
+                          className="rounded-md p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors"
+                          title="Copy to manual entry"
+                        >
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {onEditEntry && (
+                        <button
+                          type="button"
+                          onClick={() => onEditEntry(entry)}
+                          className="rounded-md p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors"
+                          title="Edit entry"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {onDeleteEntry && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteClick(entry.id)}
+                          className="rounded-md p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-destructive-light)] hover:text-[var(--color-destructive)] transition-colors"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </span>
+                  </td>
+                </tr>
               );
             })}
-          </ul>
+            </tbody>
+          </table>
         )}
       </div>
 
       {/* Delete confirmation dialog */}
       {pendingDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-200 dark:border-zinc-700 shadow-xl text-center space-y-4">
-            <p className="text-sm text-zinc-900 dark:text-zinc-100">Delete this entry? This cannot be undone.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-[var(--color-surface)] rounded-lg p-6 w-full max-w-sm border border-[var(--color-border)] shadow-xl text-center space-y-4">
+            <p className="text-sm text-[var(--color-text)]">Delete this entry? This cannot be undone.</p>
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => setPendingDeleteId(null)}
-                className="px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium hover:bg-zinc-200 dark:hover:bg-zinc-600"
+                className="px-4 py-1.5 rounded-lg bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)] transition"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 rounded-full bg-rose-600 text-white text-xs font-medium hover:bg-rose-500"
+                className="px-4 py-1.5 rounded-lg bg-[var(--color-destructive)] text-white text-xs font-medium hover:opacity-90 transition"
               >
                 Delete
               </button>

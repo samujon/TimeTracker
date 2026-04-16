@@ -269,34 +269,32 @@ export function EditorView() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {error && (
-        <p className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-2 text-sm text-red-700 dark:text-red-300">
+        <p className="rounded-lg bg-[var(--color-destructive-light)] border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-destructive)]">
           {error}
         </p>
       )}
 
       {/* ── Filter bar ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
-        {/* Description search */}
         <div className="flex flex-col gap-1 min-w-0 flex-1">
-          <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Search</label>
+          <label className="text-xs font-medium text-[var(--color-text-secondary)]">Search</label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by description…"
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
           />
         </div>
 
-        {/* Project filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Project</label>
+          <label className="text-xs font-medium text-[var(--color-text-secondary)]">Project</label>
           <select
             value={filterProjectId}
             onChange={(e) => setFilterProjectId(e.target.value)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
           >
             <option value="">All projects</option>
             {projects.map((p) => (
@@ -312,7 +310,7 @@ export function EditorView() {
           <button
             onClick={() => setExportOpen((o) => !o)}
             disabled={exportLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)] disabled:opacity-50 transition-colors"
             aria-haspopup="listbox"
             aria-expanded={exportOpen}
           >
@@ -333,14 +331,14 @@ export function EditorView() {
           {exportOpen && (
             <div
               role="listbox"
-              className="absolute right-0 mt-1 w-44 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg z-20 py-1 text-sm"
+              className="absolute right-0 mt-1 w-44 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg z-20 py-1 text-sm"
             >
               {exportPresets.map((preset) => (
                 <button
                   key={preset.label}
                   role="option"
                   onClick={() => void handleExport(preset)}
-                  className="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 transition-colors"
+                  className="w-full text-left px-4 py-2 hover:bg-[var(--color-surface-alt)] text-[var(--color-text)] transition-colors"
                 >
                   {preset.label}
                 </button>
@@ -351,21 +349,21 @@ export function EditorView() {
       </div>
 
       {exportError && (
-        <p className="text-sm text-red-500 dark:text-red-400">{exportError}</p>
+        <p className="text-sm text-[var(--color-destructive)]">{exportError}</p>
       )}
 
       {/* Tag filter pills */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 items-center">
-          <span className="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Tags:</span>
+          <span className="text-xs text-[var(--color-text-secondary)] mr-1">Tags:</span>
           {allTags.map((tag) => {
             const active = filterTagIds.includes(tag.id);
             return (
               <button
                 key={tag.id}
                 onClick={() => setFilterTagIds((prev) => toggleArrayId(prev, tag.id))}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-all
-                  ${active ? "opacity-100 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900 ring-zinc-400 dark:ring-zinc-500" : "opacity-60 hover:opacity-90"}`}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium transition-all
+                  ${active ? "opacity-100 ring-2 ring-offset-1 ring-offset-[var(--color-bg)] ring-[var(--color-border)]" : "opacity-60 hover:opacity-90"}`}
                 style={{
                   backgroundColor: tag.color ? tag.color + "33" : "#6366f133",
                   color: tag.color ?? "#6366f1",
@@ -382,7 +380,7 @@ export function EditorView() {
           {filterTagIds.length > 0 && (
             <button
               onClick={() => setFilterTagIds([])}
-              className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 ml-1 underline"
+              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] ml-1 underline"
             >
               Clear
             </button>
@@ -392,7 +390,7 @@ export function EditorView() {
 
       {/* ── Entry count summary ── */}
       {!loading && (
-        <p className="text-xs text-zinc-400 dark:text-zinc-500">
+        <p className="text-xs text-[var(--color-text-muted)]">
           {filtered.length !== entries.length
             ? `${filtered.length} of ${entries.length} loaded entries`
             : `${entries.length} of ${totalCount} entries loaded`}
@@ -401,28 +399,28 @@ export function EditorView() {
 
       {/* ── Table ── */}
       {loading ? (
-        <div className="py-12 text-center text-sm text-zinc-400 dark:text-zinc-500">
+        <div className="py-12 text-center text-sm text-[var(--color-text-muted)]">
           Loading entries…
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-zinc-400 dark:text-zinc-500">
+        <div className="py-12 text-center text-sm text-[var(--color-text-muted)]">
           {entries.length === 0 ? "No entries yet." : "No entries match your filters."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <div className="overflow-x-auto rounded-lg border border-[var(--color-border)]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-left">
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Date</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Start – End</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Duration</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400">Project</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400">Description</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400">Tags</th>
-                <th className="px-3 py-2 font-medium text-zinc-500 dark:text-zinc-400 sr-only">Actions</th>
+              <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-alt)] text-left">
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">Date</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">Start – End</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">Duration</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)]">Project</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)]">Description</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)]">Tags</th>
+                <th className="px-3 py-2 font-medium text-[var(--color-text-secondary)] sr-only">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {filtered.map((entry) => (
                 <EntryRow
                   key={entry.id}
@@ -447,7 +445,7 @@ export function EditorView() {
           <button
             onClick={() => void handleLoadMore()}
             disabled={loadingMore}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)] disabled:opacity-50 transition-colors"
           >
             {loadingMore ? "Loading…" : `Load more (${totalCount - entries.length} remaining)`}
           </button>
@@ -505,14 +503,14 @@ function EntryRow({
     : "—";
 
   return (
-    <tr className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-      <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300 whitespace-nowrap tabular-nums">
+    <tr className="group hover:bg-[var(--color-surface-alt)] transition-colors">
+      <td className="px-3 py-2 text-[var(--color-text-secondary)] whitespace-nowrap tabular-nums">
         {dateStr}
       </td>
-      <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300 whitespace-nowrap tabular-nums">
+      <td className="px-3 py-2 text-[var(--color-text-secondary)] whitespace-nowrap tabular-nums">
         {startStr}&thinsp;–&thinsp;{endStr}
       </td>
-      <td className="px-3 py-2 text-zinc-500 dark:text-zinc-400 whitespace-nowrap tabular-nums">
+      <td className="px-3 py-2 text-[var(--color-text-muted)] whitespace-nowrap tabular-nums">
         {durationStr}
       </td>
       <td className="px-3 py-2 whitespace-nowrap">
@@ -522,14 +520,14 @@ function EntryRow({
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ backgroundColor: entry.project_color ?? "#34d399" }}
             />
-            <span className="text-zinc-700 dark:text-zinc-200">{entry.project_name}</span>
+            <span className="text-[var(--color-text)]">{entry.project_name}</span>
           </span>
         ) : (
-          <span className="text-zinc-400 dark:text-zinc-500">—</span>
+          <span className="text-[var(--color-text-muted)]">—</span>
         )}
       </td>
-      <td className="px-3 py-2 text-zinc-700 dark:text-zinc-200 max-w-[16rem] truncate">
-        {entry.description || <span className="text-zinc-400 dark:text-zinc-500 italic">No description</span>}
+      <td className="px-3 py-2 text-[var(--color-text)] max-w-[16rem] truncate">
+        {entry.description || <span className="text-[var(--color-text-muted)] italic">No description</span>}
       </td>
       <td className="px-3 py-2">
         <div className="flex flex-wrap gap-1">
@@ -561,18 +559,18 @@ function EntryRow({
       <td className="px-3 py-2 whitespace-nowrap">
         {isDeleting ? (
           <span className="inline-flex items-center gap-2 text-xs">
-            <span className="text-zinc-500 dark:text-zinc-400">Delete?</span>
+            <span className="text-[var(--color-text-muted)]">Delete?</span>
             <button
               onClick={onDeleteConfirm}
               disabled={isDeletingInProgress}
-              className="rounded px-2 py-0.5 bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+              className="rounded-md px-2 py-0.5 bg-[var(--color-destructive)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               {isDeletingInProgress ? "…" : "Yes"}
             </button>
             <button
               onClick={onDeleteCancel}
               disabled={isDeletingInProgress}
-              className="rounded px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+              className="rounded-md px-2 py-0.5 bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] disabled:opacity-50 transition-colors"
             >
               No
             </button>
@@ -581,13 +579,13 @@ function EntryRow({
           <span className="inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={onEdit}
-              className="rounded px-2 py-0.5 text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              className="rounded-md px-2 py-0.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors"
             >
               Edit
             </button>
             <button
               onClick={onDeleteRequest}
-              className="rounded px-2 py-0.5 text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              className="rounded-md px-2 py-0.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-destructive-light)] hover:text-[var(--color-destructive)] transition-colors"
             >
               Delete
             </button>

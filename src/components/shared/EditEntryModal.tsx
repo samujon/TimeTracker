@@ -80,16 +80,16 @@ export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-md border border-zinc-300 dark:border-zinc-700 shadow-xl">
-        <h3 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Edit Entry</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-[var(--color-surface)] rounded-lg p-6 w-full max-w-md border border-[var(--color-border)] shadow-xl">
+        <h3 className="text-lg font-semibold mb-4 text-[var(--color-text)]">Edit Entry</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Project</label>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Project</label>
             <select
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
             >
               <option value="">— No project —</option>
               {projects.map((p) => (
@@ -100,7 +100,7 @@ export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onC
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Date</label>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Date</label>
             <DatePicker
               selected={date ? new Date(date + "T00:00:00") : null}
               onChange={(d: Date | null) => d && setDate(formatLocalDate(d))}
@@ -108,48 +108,48 @@ export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onC
               locale={sv}
               calendarStartDay={1}
               showWeekNumbers
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               popperClassName="z-50"
             />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Start time</label>
+              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Start time</label>
               <input
                 type="text"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 placeholder="HH:mm"
                 pattern="[0-2][0-9]:[0-5][0-9]"
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">End time</label>
+              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">End time</label>
               <input
                 type="text"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 placeholder="HH:mm"
                 pattern="[0-2][0-9]:[0-5][0-9]"
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Description</label>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Description</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
             />
           </div>
 
           {/* Inherited project tags — read-only */}
           {inheritedTags.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 From project
               </label>
               <div className="flex flex-wrap gap-1">
@@ -182,21 +182,21 @@ export function EditEntryModal({ entry, projects, tags, onCreateTag, onSave, onC
           />
 
           {validationError && (
-            <p className="text-xs text-rose-400">{validationError}</p>
+            <p className="text-xs text-[var(--color-destructive)]">{validationError}</p>
           )}
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-60"
+              className="px-4 py-1.5 rounded-lg bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)] disabled:opacity-60 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded-full bg-emerald-500 text-zinc-950 text-xs font-medium hover:bg-emerald-400 disabled:opacity-60"
+              className="px-4 py-1.5 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)] text-xs font-medium hover:opacity-90 disabled:opacity-60 transition"
             >
               {saving ? "Saving…" : "Save"}
             </button>

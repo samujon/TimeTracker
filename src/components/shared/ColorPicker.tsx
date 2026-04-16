@@ -22,10 +22,10 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           <button
             key={c}
             type="button"
-            className={`w-6 h-6 rounded-full border-2 transition-transform ${
+            className={`w-6 h-6 rounded-full border transition-transform ${
               value === c
-                ? "border-emerald-400 scale-110 ring-2 ring-emerald-300"
-                : "border-zinc-300 dark:border-zinc-700"
+                ? "border-[var(--color-primary)] scale-110 ring-2 ring-[var(--color-primary-muted)]"
+                : "border-[var(--color-border)]"
             }`}
             style={{ backgroundColor: c }}
             onClick={() => onChange(c)}
@@ -37,7 +37,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+        className="w-8 h-8 rounded-full border border-[var(--color-border)] cursor-pointer"
         aria-label="Pick a custom colour"
         title="Pick a custom colour"
         style={{ minWidth: 32 }}

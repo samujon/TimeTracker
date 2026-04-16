@@ -16,7 +16,7 @@ describe('TimeTracker', () => {
   it('renders setup screen if Supabase is not configured', () => {
     render(
       <UserContext.Provider value={mockUserContext}>
-        <TimeTracker theme="light" toggleTheme={noop} />
+        <TimeTracker />
       </UserContext.Provider>
     );
     expect(screen.getByText(/connect supabase to start tracking time/i)).toBeInTheDocument();

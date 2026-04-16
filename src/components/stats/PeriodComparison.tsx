@@ -50,14 +50,14 @@ export function PeriodComparison({ current, previous, view }: Props) {
         : null;
 
     return (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 px-4 py-4">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                <h3 className="text-sm font-semibold text-[var(--color-text)]">
                     Period comparison
                 </h3>
-                <span className={`text-sm font-medium ${totalDelta == null ? "text-zinc-400" : totalDelta >= 0 ? "text-emerald-500" : "text-rose-400"}`}>
+                <span className={`text-sm font-medium ${totalDelta == null ? "text-[var(--color-text-muted)]" : totalDelta >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}>
                     {totalDelta != null ? (totalDelta >= 0 ? `+${totalDelta}%` : `${totalDelta}%`) : "—"}
-                    <span className="text-zinc-400 font-normal ml-1">vs {periodLabel(view)}</span>
+                    <span className="text-[var(--color-text-muted)] font-normal ml-1">vs {periodLabel(view)}</span>
                 </span>
             </div>
 
@@ -69,17 +69,17 @@ export function PeriodComparison({ current, previous, view }: Props) {
                             <div className="flex items-center justify-between text-xs mb-1">
                                 <div className="flex items-center gap-1.5">
                                     <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: row.color }} />
-                                    <span className="text-zinc-700 dark:text-zinc-200 font-medium">{row.name}</span>
+                                    <span className="text-[var(--color-text)] font-medium">{row.name}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                                <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
                                     <span>{formatDuration(row.current)}</span>
-                                    <span className={`font-medium ${row.delta == null ? "text-zinc-400" : row.delta >= 0 ? "text-emerald-500" : "text-rose-400"}`}>
+                                    <span className={`font-medium ${row.delta == null ? "text-[var(--color-text-muted)]" : row.delta >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}>
                                         {row.delta != null ? (row.delta >= 0 ? `+${row.delta}%` : `${row.delta}%`) : "new"}
                                     </span>
                                 </div>
                             </div>
                             {/* Previous period: faint background bar */}
-                            <div className="relative h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                            <div className="relative h-1.5 rounded-full bg-[var(--color-surface-alt)] overflow-hidden">
                                 <div
                                     className="absolute inset-y-0 left-0 rounded-full opacity-30"
                                     style={{ width: `${(row.previous / maxVal) * 100}%`, backgroundColor: row.color }}

@@ -37,12 +37,12 @@ export function StatsControls({
         <>
             {/* View type toggle + Export button */}
             <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                     {(["daily", "weekly", "monthly"] as const).map((v) => (
                         <button
                             key={v}
                             onClick={() => setView(v)}
-                            className={`px-4 py-2 rounded capitalize ${view === v ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                            className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize transition ${view === v ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
                                 }`}
                         >
                             {v}
@@ -50,12 +50,11 @@ export function StatsControls({
                     ))}
                 </div>
 
-                {/* Export dropdown */}
                 <div className="relative" ref={dropdownRef}>
                     <button
                         onClick={toggleOpen}
                         disabled={exportLoading}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)] disabled:opacity-50 transition-colors border border-[var(--color-border)]"
                         aria-haspopup="listbox"
                         aria-expanded={exportOpen}
                     >
@@ -77,14 +76,14 @@ export function StatsControls({
                     {exportOpen && (
                         <div
                             role="listbox"
-                            className="absolute right-0 mt-1 w-48 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg z-20 py-1 text-sm"
+                            className="absolute right-0 mt-1 w-48 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg z-20 py-1 text-sm"
                         >
                             {presets.map((preset) => (
                                 <button
                                     key={preset.label}
                                     role="option"
                                     onClick={() => void handleExport(preset)}
-                                    className="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 transition-colors"
+                                    className="w-full text-left px-4 py-2 hover:bg-[var(--color-surface-alt)] text-[var(--color-text)] transition-colors"
                                 >
                                     {preset.label}
                                 </button>
@@ -95,22 +94,21 @@ export function StatsControls({
             </div>
 
             {exportError && (
-                <p className="text-sm text-red-500 dark:text-red-400">{exportError}</p>
+                <p className="text-sm text-[var(--color-destructive)]">{exportError}</p>
             )}
 
             <PeriodNav view={view} selectedDate={selectedDate} onChange={onDateChange} />
 
-            {/* Group-by toggle */}
-            <div className="flex gap-2">
+            <div className="flex gap-1">
                 <button
-                    className={`px-3 py-1 rounded ${groupBy === "period" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${groupBy === "period" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
                         }`}
                     onClick={() => setGroupBy("period")}
                 >
                     Split by {view === "daily" ? "hour" : view === "weekly" ? "day" : "week"}
                 </button>
                 <button
-                    className={`px-3 py-1 rounded ${groupBy === "task" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${groupBy === "task" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
                         }`}
                     onClick={() => setGroupBy("task")}
                 >
@@ -121,7 +119,7 @@ export function StatsControls({
             {/* Tag filter */}
             {allTags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Filter by tag:</span>
+                    <span className="text-xs font-medium text-[var(--color-text-secondary)]">Filter by tag:</span>
                     {allTags.map((tag) => {
                         const active = filterTagIds.includes(tag.id);
                         return (
@@ -133,8 +131,8 @@ export function StatsControls({
                                         active ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
                                     )
                                 }
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium border-2 transition ${
-                                    active ? "border-transparent text-zinc-950" : "border-transparent text-zinc-900 dark:text-zinc-100 opacity-50 hover:opacity-80"
+                                className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-medium border transition ${
+                                    active ? "border-transparent text-[var(--color-primary-foreground)]" : "border-transparent text-[var(--color-text)] opacity-50 hover:opacity-80"
                                 }`}
                                 style={{
                                     backgroundColor: active ? (tag.color ?? DEFAULT_PROJECT_COLOR) : "transparent",
@@ -154,7 +152,7 @@ export function StatsControls({
                         <button
                             type="button"
                             onClick={() => setFilterTagIds([])}
-                            className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 underline"
+                            className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] underline"
                         >
                             Clear filters
                         </button>

@@ -14,10 +14,10 @@ const CELL_GAP = 2;
 
 function getCellColor(seconds: number, maxSeconds: number): string {
     const ratio = Math.min(seconds / maxSeconds, 1);
-    if (ratio < 0.25) return "#d1fae5"; // emerald-100
-    if (ratio < 0.5) return "#6ee7b7"; // emerald-300
-    if (ratio < 0.75) return "#10b981"; // emerald-500
-    return "#047857"; // emerald-700
+    if (ratio < 0.25) return "#c7d2fe"; // indigo-200
+    if (ratio < 0.5) return "#818cf8"; // indigo-400
+    if (ratio < 0.75) return "#6366f1"; // indigo-500
+    return "#4338ca"; // indigo-700
 }
 
 function fmtTooltip(dateStr: string, seconds: number): string {
@@ -71,15 +71,15 @@ export function HeatmapCalendar({ dailyMap }: Props) {
     }, [dailyMap]);
 
     return (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 px-4 py-4">
-            <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-4">Activity — last 12 months</h3>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] mb-4">Activity — last 12 months</h3>
             <div className="flex items-start w-full" style={{ gap: CELL_GAP }}>
                 {/* Day labels column */}
                 <div className="flex flex-col shrink-0 mt-[18px]" style={{ gap: CELL_GAP }}>
                     {DAY_LABELS.map((label, i) => (
                         <div
                             key={i}
-                            className="text-[9px] text-zinc-400 text-right pr-1"
+                            className="text-[9px] text-[var(--color-text-muted)] text-right pr-1"
                             style={{ height: 12, lineHeight: "12px", width: 24 }}
                         >
                             {label}
@@ -94,7 +94,7 @@ export function HeatmapCalendar({ dailyMap }: Props) {
                         {weeks.map((_, wi) => (
                             <div key={wi} className="flex-1 min-w-0">
                                 {monthByWeek[wi] && (
-                                    <span className="text-[9px] text-zinc-400 whitespace-nowrap">{monthByWeek[wi]}</span>
+                                    <span className="text-[9px] text-[var(--color-text-muted)] whitespace-nowrap">{monthByWeek[wi]}</span>
                                 )}
                             </div>
                         ))}
@@ -112,11 +112,11 @@ export function HeatmapCalendar({ dailyMap }: Props) {
                                             day.isFuture
                                                 ? "opacity-0"
                                                 : day.seconds === 0
-                                                ? "bg-zinc-100 dark:bg-zinc-800"
+                                                ? "bg-[var(--color-surface-alt)]"
                                                 : ""
                                         }`}
                                         style={{
-                                            ...(day.isToday ? { outline: "2px solid #10b981", outlineOffset: "-2px", borderRadius: 3 } : {}),
+                                            ...(day.isToday ? { outline: "2px solid var(--color-primary)", outlineOffset: "-2px", borderRadius: 3 } : {}),
                                             ...(day.seconds > 0 && !day.isFuture
                                                 ? { backgroundColor: getCellColor(day.seconds, maxSeconds) }
                                                 : {}),

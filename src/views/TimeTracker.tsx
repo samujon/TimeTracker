@@ -14,9 +14,8 @@ import { RecentEntries } from "@/components/tracker/RecentEntries";
 import { EditEntryModal } from "@/components/shared/EditEntryModal";
 import type { TimeEntry } from "@/types";
 import { buildHourOptions, formatLocalDate, formatLocalTime } from "@/lib/timeUtils";
-import type { Theme } from "@/hooks/useTheme";
 
-export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) {
+export function TimeTracker() {
   const { isRunning, startedAt, formattedElapsed, start: timerStart, stop: timerStop, reset: timerReset } = useTimer();
 
   const hourOptions = useMemo(() => buildHourOptions(), []);
@@ -195,24 +194,9 @@ export function TimeTracker({ theme, toggleTheme }: { theme: Theme; toggleTheme:
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8">
-      <header className="flex items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Time Tracker</h1>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Minimal, self-hosted tracking powered by Supabase.</p>
-        </div>
-        <button
-          onClick={toggleTheme}
-          className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? '🌙 Dark mode' : '☀ Light mode'}
-        </button>
-      </header>
-
+    <div className="space-y-6">
       {loading ? (
-        <div className="text-zinc-500 dark:text-zinc-400 text-sm py-8 text-center">Loading…</div>
+        <div className="text-[var(--color-text-muted)] text-sm py-8 text-center">Loading…</div>
       ) : (
         <>
           <ProjectSelector

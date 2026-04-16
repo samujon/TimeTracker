@@ -16,16 +16,16 @@ export function StreakDisplay({ currentStreak, longestStreak, longestStreakThisY
     ];
 
     return (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 px-4 py-4">
-            <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-3">Streaks</h3>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Streaks</h3>
             <div className="grid grid-cols-3 gap-4 text-center">
                 {stats.map((s) => (
                     <div key={s.label}>
-                        <p className="text-3xl font-bold text-emerald-500">{s.value}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        <p className="text-3xl font-bold text-[var(--color-primary)]">{s.value}</p>
+                        <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
                             {s.value === 1 ? "day" : "days"}
                         </p>
-                        <p className="text-xs text-zinc-400 mt-0.5">{s.label}</p>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{s.label}</p>
                     </div>
                 ))}
             </div>
