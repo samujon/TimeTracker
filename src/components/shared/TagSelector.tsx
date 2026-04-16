@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 import type { Tag } from "@/types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import { useClickOutside } from "@/hooks/useClickOutside";
@@ -71,18 +71,18 @@ export function TagSelector({
 
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
         {label}
       </label>
 
       {!compact && (
-        <div className="flex gap-2 mb-2">
+        <div className="flex gap-1 mb-2">
           <button
             type="button"
-            className={`rounded-full px-3 py-0.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-0.5 text-xs font-medium transition ${
               tab === "select"
-                ? "bg-emerald-500 text-zinc-950"
-                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
             }`}
             onClick={() => setTab("select")}
           >
@@ -90,10 +90,10 @@ export function TagSelector({
           </button>
           <button
             type="button"
-            className={`rounded-full px-3 py-0.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-0.5 text-xs font-medium transition ${
               tab === "manage"
-                ? "bg-rose-600 text-white"
-                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                ? "bg-[var(--color-destructive)] text-white"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
             }`}
             onClick={() => setTab("manage")}
           >
@@ -118,7 +118,7 @@ export function TagSelector({
                 className="ml-0.5 rounded-full p-0.5 hover:bg-black/10"
                 aria-label={`Remove tag ${tag.name}`}
               >
-                <XMarkIcon className="h-3 w-3" />
+                <X className="h-3 w-3" />
               </button>
             </span>
           ))}
@@ -143,7 +143,7 @@ export function TagSelector({
                 }
               }}
               placeholder="Add or search tags…"
-              className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               autoComplete="off"
             />
             {/* Color button — only shown when about to create a new tag */}
@@ -151,7 +151,7 @@ export function TagSelector({
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 flex items-center justify-center cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center cursor-pointer"
                   style={{ backgroundColor: newTagColor }}
                   aria-label="Choose tag colour"
                   onMouseDown={(e) => {
@@ -162,7 +162,7 @@ export function TagSelector({
                 {colorDisclosure.open && (
                   <div
                     ref={colorDisclosure.ref}
-                    className="absolute z-30 right-0 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg"
+                    className="absolute z-30 right-0 mt-2 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
                     style={{ minWidth: 180 }}
                     onMouseDown={(e) => e.preventDefault()}
                   >
@@ -176,7 +176,7 @@ export function TagSelector({
                 type="button"
                 disabled={creating}
                 onClick={handleCreate}
-                className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-4 py-1.5 text-xs font-medium text-zinc-950 shadow-sm transition hover:bg-white disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-primary-foreground)] transition hover:opacity-90 disabled:opacity-60"
               >
                 {creating ? "Adding…" : "Add"}
               </button>
@@ -185,11 +185,11 @@ export function TagSelector({
 
           {/* Dropdown of matching existing tags */}
           {dropdownDisclosure.open && filteredTags.length > 0 && (
-            <div className="absolute left-0 right-0 mt-1 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+            <div className="absolute left-0 right-0 mt-1 z-10 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg max-h-40 overflow-y-auto">
               {filteredTags.map((tag) => (
                 <div
                   key={tag.id}
-                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[var(--color-surface-alt)]"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     onToggleTag(tag.id);
@@ -198,10 +198,10 @@ export function TagSelector({
                   }}
                 >
                   <span
-                    className="inline-block w-3 h-3 rounded-full border border-zinc-300 dark:border-zinc-700 flex-shrink-0"
+                    className="inline-block w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR }}
                   />
-                  <span className="text-sm text-zinc-900 dark:text-zinc-100">{tag.name}</span>
+                  <span className="text-sm text-[var(--color-text)]">{tag.name}</span>
                 </div>
               ))}
             </div>
@@ -213,11 +213,11 @@ export function TagSelector({
       {tab === "manage" && !compact && (
         <div className="mt-2">
           {allTags.length === 0 ? (
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 py-2">
+            <p className="text-xs text-[var(--color-text-muted)] py-2">
               No tags yet. Switch to &ldquo;Select&rdquo; and type a new tag name to create one.
             </p>
           ) : (
-            <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ul className="divide-y divide-[var(--color-border)]">
               {allTags.map((tag) => (
                 <li key={tag.id} className="flex items-center justify-between py-1.5 gap-2">
                   <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ export function TagSelector({
                     >
                       <button
                         type="button"
-                        className="w-7 h-7 rounded-full border-2 border-zinc-300 dark:border-zinc-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                        className="w-6 h-6 rounded-full border border-[var(--color-border)] cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)] transition"
                         style={{ backgroundColor: tag.color ?? DEFAULT_PROJECT_COLOR }}
                         title={onUpdateTagColor ? "Edit tag colour" : "Tag colour"}
                         aria-label={onUpdateTagColor ? "Edit tag colour" : "Tag colour"}
@@ -239,7 +239,7 @@ export function TagSelector({
                       />
                       {editColorTagId === tag.id && onUpdateTagColor && (
                         <div
-                          className="absolute z-30 left-0 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg"
+                          className="absolute z-30 left-0 mt-2 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
                           style={{ minWidth: 180 }}
                           onMouseDown={(e) => e.preventDefault()}
                         >
@@ -253,13 +253,13 @@ export function TagSelector({
                         </div>
                       )}
                     </div>
-                    <span className="text-sm text-zinc-900 dark:text-zinc-100">{tag.name}</span>
+                    <span className="text-sm text-[var(--color-text)]">{tag.name}</span>
                   </div>
                   {onDeleteTag && (
                     <button
                       type="button"
                       onClick={() => onDeleteTag(tag.id)}
-                      className="ml-2 rounded bg-rose-600 px-2 py-0.5 text-xs text-white hover:bg-rose-500"
+                      className="ml-2 rounded-md bg-[var(--color-destructive)] px-2 py-0.5 text-xs text-white hover:opacity-90 transition"
                     >
                       Delete
                     </button>

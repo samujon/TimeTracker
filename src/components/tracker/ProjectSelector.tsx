@@ -57,33 +57,28 @@ export function ProjectSelector({
 
 
   return (
-    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-4">
+    <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Projects</h2>
-          <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
-            Reuse consistent project names across days.
-          </p>
-        </div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">Projects</h2>
       </div>
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex gap-1.5">
         <button
           type="button"
-          className={`rounded-full px-4 py-1 text-xs font-medium transition ${tab === "main" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
+          className={`rounded-md px-3 py-1 text-xs font-medium transition ${tab === "main" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"}`}
           onClick={() => setTab("main")}
         >
           Select/Add
         </button>
         <button
           type="button"
-          className={`rounded-full px-4 py-1 text-xs font-medium transition ${tab === "tags" ? "bg-violet-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
+          className={`rounded-md px-3 py-1 text-xs font-medium transition ${tab === "tags" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"}`}
           onClick={() => setTab("tags")}
         >
           Tags
         </button>
         <button
           type="button"
-          className={`rounded-full px-4 py-1 text-xs font-medium transition ${tab === "delete" ? "bg-rose-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
+          className={`rounded-md px-3 py-1 text-xs font-medium transition ${tab === "delete" ? "bg-[var(--color-destructive)] text-white" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"}`}
           onClick={() => setTab("delete")}
         >
           Delete
@@ -93,7 +88,7 @@ export function ProjectSelector({
 
       {tab === "main" && (
         <form onSubmit={handleCreateProject} className="flex flex-col gap-2">
-          <label className="block text-xs font-medium text-zinc-300 mb-1">Project</label>
+          <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Project</label>
           <div className="relative flex items-center gap-2" ref={dropdownDisclosure.ref}>
               <input
                 type="text"
@@ -109,21 +104,20 @@ export function ProjectSelector({
                 }}
                 onFocus={() => dropdownDisclosure.set(true)}
                 onDoubleClick={() => dropdownDisclosure.set(true)}
-                className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
                 placeholder="Type or pick a project"
                 disabled={creatingProject}
                 autoComplete="off"
               />
-              {/* Custom dropdown only visible when input is focused or typing */}
               {dropdownDisclosure.open && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {projects.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">No projects</div>
+                    <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No projects</div>
                   )}
                   {projects.map((project) => (
                     <div
                       key={project.id}
-                      className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 ${project.name === newProjectName ? "bg-zinc-100 dark:bg-zinc-800" : ""}`}
+                      className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[var(--color-surface-alt)] ${project.name === newProjectName ? "bg-[var(--color-surface-alt)]" : ""}`}
                       onMouseDown={() => {
                         setNewProjectName(project.name);
                         setSelectedProjectId(project.id);
@@ -131,20 +125,19 @@ export function ProjectSelector({
                       }}
                     >
                       <span
-                        className="inline-block w-4 h-4 rounded-full border-2 border-zinc-700"
+                        className="inline-block w-3 h-3 rounded-full"
                         style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
                       />
-                      <span className="text-sm text-zinc-900 dark:text-zinc-100">{project.name}</span>
+                      <span className="text-sm text-[var(--color-text)]">{project.name}</span>
                     </div>
                   ))}
                 </div>
               )}
-            {/* Color picker button for new project — only shown when about to create */}
             {!existingProject && newProjectName.trim() && (
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center cursor-pointer"
                   style={{ backgroundColor: newProjectColor }}
                   aria-label="Choose color"
                   tabIndex={0}
@@ -158,7 +151,7 @@ export function ProjectSelector({
                 {newColorDisclosure.open && (
                   <div
                     ref={newColorDisclosure.ref}
-                    className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg flex flex-col items-center"
+                    className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg flex flex-col items-center"
                     style={{ minWidth: 180 }}
                     tabIndex={-1}
                     onMouseDown={e => e.preventDefault()}
@@ -172,19 +165,18 @@ export function ProjectSelector({
               <button
                 type="submit"
                 disabled={creatingProject}
-                className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-5 py-2 text-xs font-medium text-zinc-950 shadow-md shadow-black/30 transition hover:bg-white disabled:opacity-60 ml-2"
+                className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-primary-foreground)] transition hover:opacity-90 disabled:opacity-60"
               >
                 Add
               </button>
             )}
-            {/* Show color dot if selecting existing project — clickable to edit color */}
             {existingProject && (() => {
               const proj = existingProject;
               return (
                 <div className="relative flex-shrink-0" ref={editColorDisclosure.ref}>
                   <button
                     type="button"
-                    className="w-8 h-8 rounded-full border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center ml-2 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                    className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center ml-2 cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)] transition"
                     style={{ backgroundColor: proj.color ?? DEFAULT_PROJECT_COLOR }}
                     title="Edit project color"
                     aria-label="Edit project color"
@@ -195,11 +187,11 @@ export function ProjectSelector({
                   />
                   {editColorDisclosure.open && (
                     <div
-                      className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg flex flex-col items-center"
+                      className="absolute z-30 left-1/2 -translate-x-1/2 mt-2 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg flex flex-col items-center"
                       style={{ minWidth: 180 }}
                       onMouseDown={e => e.preventDefault()}
                     >
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2">Edit project color</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mb-2">Edit project color</p>
                       <ColorPicker
                         value={proj.color ?? DEFAULT_PROJECT_COLOR}
                         onChange={(c) => void onUpdateProjectColor(proj.id, c)}
@@ -210,14 +202,11 @@ export function ProjectSelector({
               );
             })()}
           </div>
-          {/* Removed duplicate color picker below input */}
-          {/* Removed duplicate Add button below input row */}
         </form>
       )}
 
       {tab === "tags" && (
         <div className="space-y-4">
-          {/* Global tag management */}
           <TagSelector
             allTags={tags}
             selectedTagIds={[]}
@@ -228,20 +217,19 @@ export function ProjectSelector({
             label="All tags"
           />
 
-          {/* Per-project tag assignment */}
           {projects.length > 0 && (
             <div className="space-y-3 mt-4">
-              <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+              <p className="text-[11px] font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
                 Tags per project
               </p>
               {projects.map((project) => (
-                <div key={project.id} className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
+                <div key={project.id} className="border border-[var(--color-border)] rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className="inline-block w-3 h-3 rounded-full border border-zinc-300 dark:border-zinc-700"
+                      className="inline-block w-3 h-3 rounded-full"
                       style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
                     />
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{project.name}</span>
+                    <span className="text-sm font-medium text-[var(--color-text)]">{project.name}</span>
                   </div>
                   <TagSelector
                     allTags={tags}
@@ -266,20 +254,20 @@ export function ProjectSelector({
       )}
 
       {tab === "delete" && projects.length > 0 && (
-        <ul className="mt-4 divide-y divide-zinc-200 dark:divide-zinc-800">
+        <ul className="mt-2 divide-y divide-[var(--color-border)]">
           {projects.map((project) => (
-            <li key={project.id} className="flex items-center justify-between py-1">
+            <li key={project.id} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2">
                 <span
-                  className="inline-block w-5 h-5 rounded-full border border-zinc-300 dark:border-zinc-700 flex-shrink-0"
+                  className="inline-block w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: project.color ?? DEFAULT_PROJECT_COLOR }}
                 />
-                <span className="text-sm text-zinc-900 dark:text-zinc-100">{project.name}</span>
+                <span className="text-sm text-[var(--color-text)]">{project.name}</span>
               </div>
               <button
                 type="button"
                 onClick={() => onDeleteProject(project.id)}
-                className="ml-2 rounded bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-500"
+                className="ml-2 rounded-md bg-[var(--color-destructive)] px-2.5 py-1 text-xs text-white hover:opacity-90 transition"
                 title="Delete project"
               >
                 Delete

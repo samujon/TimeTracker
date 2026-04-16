@@ -120,20 +120,20 @@ export function ManualEntryForm({
   }, [showEndDropdown, filteredEndOptions]);
 
   return (
-    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Add manual entry</h2>
-        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+    <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">Manual entry</h2>
+        <span className="text-[11px] text-[var(--color-text-muted)]">
           For past days or specific times
         </span>
       </div>
       <form
         onSubmit={handleManualSubmit}
-        className="grid gap-4 sm:grid-cols-2"
+        className="grid gap-3 sm:grid-cols-2"
         autoComplete="off"
       >
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
             Date
           </label>
           <DatePicker
@@ -143,12 +143,12 @@ export function ManualEntryForm({
             showWeekNumbers
             locale={sv}
             calendarStartDay={1}
-            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
             popperClassName="z-50"
           />
         </div>
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
             Description (optional)
           </label>
           <input
@@ -156,12 +156,11 @@ export function ManualEntryForm({
             value={manualDescription}
             onChange={(e) => setManualDescription(e.target.value)}
             placeholder="What did you work on?"
-            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
           />
         </div>
-        {/* Start time with custom dropdown */}
-        <div className="space-y-2 relative" ref={startWrapRef}>
-          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-1.5 relative" ref={startWrapRef}>
+          <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
             Start time (24h)
           </label>
           <input
@@ -175,18 +174,18 @@ export function ManualEntryForm({
               setShowStartDropdown(true);
             }}
             autoComplete="off"
-            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
           />
           {showStartDropdown && (
             <ul
               ref={startDropdownRef}
-              className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg"
+              className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
               style={{ top: '100%' }}
             >
               {allHourOptions.map((value) => (
                 <li
                   key={value}
-                  className="cursor-pointer px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-emerald-600/20"
+                  className="cursor-pointer px-3 py-1.5 text-sm text-[var(--color-text)] hover:bg-[var(--color-primary-light)]"
                   onMouseDown={() => {
                     setManualStartTime(value);
                     setShowStartDropdown(false);
@@ -198,9 +197,8 @@ export function ManualEntryForm({
             </ul>
           )}
         </div>
-        {/* End time and duration */}
-        <div className="space-y-2 relative" ref={endWrapRef}>
-          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">End time (24h) or duration</label>
+        <div className="space-y-1.5 relative" ref={endWrapRef}>
+          <label className="block text-xs font-medium text-[var(--color-text-secondary)]">End time (24h) or duration</label>
           <div className="flex gap-2">
             <div className="relative w-1/2">
               <input
@@ -215,18 +213,18 @@ export function ManualEntryForm({
                   setEndManuallyEdited(true);
                 }}
                 autoComplete="off"
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               />
               {showEndDropdown && (
                 <ul
                   ref={endDropdownRef}
-                  className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg"
+                  className="absolute left-0 z-30 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
                   style={{ top: '100%' }}
                 >
                   {filteredEndOptions.map((value) => (
                     <li
                       key={value}
-                      className="cursor-pointer px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-emerald-600/20"
+                      className="cursor-pointer px-3 py-1.5 text-sm text-[var(--color-text)] hover:bg-[var(--color-primary-light)]"
                       onMouseDown={() => {
                         setManualEndTime(value);
                         setShowEndDropdown(false);
@@ -245,12 +243,10 @@ export function ManualEntryForm({
                 placeholder="e.g. 1h 15m or 1:5 or 01:30"
                 value={manualDuration}
                 onChange={e => {
-                  // Allow user to type freely, don't pad on every keystroke
                   setManualDuration(e.target.value);
                   setEndManuallyEdited(false);
                 }}
                 onBlur={e => {
-                  // On blur, if h:m or h:mm or hh:m, format to hh:mm
                   const val = e.target.value;
                   const colonMatch = val.match(/^(\d{1,2}):(\d{1,2})$/);
                   if (colonMatch) {
@@ -259,9 +255,9 @@ export function ManualEntryForm({
                     setManualDuration(`${hours}:${mins}`);
                   }
                 }}
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
               />
-              <span className="block text-xs text-zinc-400 dark:text-zinc-500 mt-1">Duration (e.g. 1h 15m, 1:5, 01:30, 1:30; auto-formats to hh:mm)</span>
+              <span className="block text-[10px] text-[var(--color-text-muted)] mt-1">Duration (e.g. 1h 15m, 01:30)</span>
             </div>
           </div>
         </div>
@@ -269,7 +265,7 @@ export function ManualEntryForm({
           <button
             type="submit"
             disabled={manualSaving}
-            className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-6 py-2 text-xs font-medium text-zinc-950 shadow-md shadow-black/30 transition hover:bg-white disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-lg bg-[var(--color-surface-alt)] px-5 py-1.5 text-xs font-medium text-[var(--color-text)] border border-[var(--color-border)] transition hover:bg-[var(--color-bg)] disabled:opacity-60"
           >
             Save manual entry
           </button>

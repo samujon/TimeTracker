@@ -43,19 +43,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   };
 
   if (loading) {
-    // Minimal spinner while we verify the session — avoids layout flash
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-300 border-t-emerald-500 dark:border-zinc-700 dark:border-t-emerald-400" />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)]">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 py-12">
-        <div className="w-full max-w-sm rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-lg shadow-black/5 dark:shadow-black/20">
-          <h1 className="mb-6 text-center text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--color-bg)] px-4 py-12">
+        <div className="w-full max-w-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-8 shadow-lg">
+          <h1 className="mb-6 text-center text-xl font-semibold tracking-tight text-[var(--color-text)]">
             Time Tracker
           </h1>
           <Auth
@@ -72,8 +71,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               variables: {
                 default: {
                   colors: {
-                    brand: "#10b981",
-                    brandAccent: "#059669",
+                    brand: "#4f46e5",
+                    brandAccent: "#4338ca",
                   },
                 },
               },

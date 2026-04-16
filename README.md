@@ -19,8 +19,9 @@ Also possible to use https://time-tracker-beryl-nine.vercel.app/ if you don't wa
   - Streaks: current, longest all‑time, and longest this year
 - **Export** — download entries as CSV (current period, this week/month/year, or all time)
 - **Editor** — browse, search, and edit all entries in a scrollable table
-- **Keyboard shortcuts** — `Space` to start/stop the timer, `1` / `2` / `3` to switch tabs
-- **Dark / light mode** — toggle in the UI; respects system preference by default
+- **Sidebar navigation** — collapsible sidebar with quick access to all views; mobile-friendly drawer
+- **Keyboard shortcuts** — `Space` to start/stop the timer, `1` / `2` / `3` to switch views
+- **Dark / light mode** — toggle in the sidebar; respects system preference by default
 
 ### Tech stack
 
@@ -129,7 +130,7 @@ Fill in the date, start time, and end time (or a duration like `1:30` or `90m`) 
 - Filter the Stats view by one or more tags to see time for a specific area of work.
 
 ### Statistics
-Navigate to the **Stats** tab. Use the **Daily / Weekly / Monthly** toggle to change the period and the **Split by period / project** toggle to switch the chart grouping.
+Navigate to the **Stats** view. Use the **Daily / Weekly / Monthly** toggle to change the period and the **Split by period / project** toggle to switch the chart grouping.
 
 Below the chart you will find:
 - **Summary cards** — total tracked time, daily average, peak day, and peak hour for the selected period.
@@ -139,16 +140,16 @@ Below the chart you will find:
 - **Streaks** — your current daily streak, longest all-time streak, and longest streak this year.
 
 ### Export
-Click **Export CSV** on the Stats tab and choose a preset (current period, this week, this month, this year, or all time) to download the corresponding entries.
+Click **Export CSV** on the Stats view and choose a preset (current period, this week, this month, this year, or all time) to download the corresponding entries.
 
 ### Keyboard shortcuts
 
 | Key | Action |
 |---|---|
 | `Space` | Start / stop the timer |
-| `1` | Switch to Tracker tab |
-| `2` | Switch to Stats tab |
-| `3` | Switch to Editor tab |
+| `1` | Switch to Tracker view |
+| `2` | Switch to Stats view |
+| `3` | Switch to Editor view |
 
 
 ---

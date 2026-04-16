@@ -75,11 +75,11 @@ export function StatsSummaryCards({ entries, view, selectedDate }: Props) {
             {cards.map((card) => (
                 <div
                     key={card.label}
-                    className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 px-4 py-3"
+                    className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3"
                 >
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">{card.label}</p>
-                    <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{card.value}</p>
-                    {card.sub && <p className="text-xs text-zinc-400 mt-0.5">{card.sub}</p>}
+                    <p className="text-xs text-[var(--color-text-secondary)] mb-1">{card.label}</p>
+                    <p className="text-xl font-semibold text-[var(--color-text)]">{card.value}</p>
+                    {card.sub && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{card.sub}</p>}
                 </div>
             ))}
         </div>
