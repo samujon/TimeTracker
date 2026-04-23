@@ -21,7 +21,7 @@ Also possible to use https://time-tracker-beryl-nine.vercel.app/ if you don't wa
 - **Editor** — browse, search, and edit all entries in a scrollable table
 - **Sidebar navigation** — collapsible sidebar with quick access to all views; mobile-friendly drawer
 - **Keyboard shortcuts** — `Space` to start/stop the timer, `1` / `2` / `3` to switch views
-- **Dark / light mode** — toggle in the sidebar; respects system preference by default
+- **Dark / light mode** — toggle in the sidebar; defaults to system preference on each new visit
 
 ### Tech stack
 
@@ -156,4 +156,17 @@ Click **Export CSV** on the Stats view and choose a preset (current period, this
 
 ## 9. Data storage
 
-All data lives in your own Supabase project. No analytics or external services are used beyond Supabase itself.
+All data lives in your own Supabase project. No analytics or marketing tooling is included.
+
+- **Strictly necessary auth cookies** — Supabase Auth sets cookies needed to sign in, keep the session valid, and refresh it during normal app use.
+- **Preference storage** — none by default. Theme and sidebar state are not persisted in browser storage, so the app falls back to your system color-scheme preference on each new visit.
+- **Third-party sign-in** — if you enable Google sign-in, Google may set its own cookies during the user-initiated OAuth flow.
+- **Other browser storage** — this app does not use localStorage, sessionStorage, or IndexedDB for analytics or convenience preferences.
+
+The app exposes a public storage notice at `/storage` for operated deployments.
+
+## 10. Operator guidance
+
+If you run a hosted version of this app, you are responsible for publishing the storage notice and reassessing local legal requirements for the regions you serve.
+
+If you self-host this project as a template, re-check your obligations before adding analytics, error-reporting SDKs, chat widgets, embeds, A/B testing, or any other third-party scripts. Those changes can move you from a no-banner setup to a consent-required setup.

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Clock, BarChart3, Table2, PanelLeftClose, PanelLeft, Sun, Moon, LogOut } from "lucide-react";
+import { Clock, BarChart3, Table2, PanelLeftClose, PanelLeft, Sun, Moon, LogOut, FileText } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import type { ActiveView } from "./AppShell";
 import type { Theme } from "@/hooks/useTheme";
@@ -91,6 +92,19 @@ export function Sidebar({
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           {!collapsed && <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>}
         </button>
+
+        <Link
+          href="/storage"
+          onClick={onMobileClose}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)] transition-colors focus-ring",
+            collapsed && "justify-center px-0"
+          )}
+          title="Storage notice"
+        >
+          <FileText className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && <span>Storage notice</span>}
+        </Link>
 
         {/* Collapse toggle (desktop only) */}
         <button

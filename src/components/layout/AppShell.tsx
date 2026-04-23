@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { cn } from "@/lib/utils";
@@ -16,25 +16,12 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-const STORAGE_KEY = "sidebar-collapsed";
-
 export function AppShell({ activeView, setActiveView, theme, toggleTheme, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "true") setCollapsed(true);
-    } catch {}
-  }, []);
-
   const toggleCollapsed = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
-      return next;
-    });
+    setCollapsed((prev) => !prev);
   };
 
   const viewTitles: Record<ActiveView, string> = {
