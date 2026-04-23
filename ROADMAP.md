@@ -37,3 +37,9 @@
 - [ ] **Reports with PDF export** — formatted weekly/monthly summaries for clients
 - [ ] **Browser extension** — start/stop from any tab, auto-detect project from URL (GitHub, Jira, etc.)
 - [ ] **Auto-categorization** — suggest project/tags based on description history
+
+## Compliance guardrails
+
+- Hosted deployment target keeps only Supabase auth cookies by default. Theme and sidebar preferences do not persist across visits.
+- Self-hosted deployers need their own cookie/storage assessment if they add analytics, error reporting, embedded media, chat widgets, or other third-party tooling.
+- Any future client-side persistence or third-party SDK should trigger a fresh cookie/storage review before release.

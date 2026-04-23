@@ -73,6 +73,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key`}
           are picked up. This screen will disappear automatically when the keys
           are configured.
         </p>
+        <p className="mt-3 text-xs text-[var(--color-text-muted)]">
+          For cookie and device storage details, see the{" "}
+          <Link href="/storage" className="underline underline-offset-4 hover:text-[var(--color-text)]">
+            storage notice
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

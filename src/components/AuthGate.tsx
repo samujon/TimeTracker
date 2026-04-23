@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
@@ -78,6 +79,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               },
             }}
           />
+          <p className="mt-4 text-center text-xs text-[var(--color-text-muted)]">
+            Supabase auth cookies are used only for sign-in and session handling. Read the{" "}
+            <Link href="/storage" className="underline underline-offset-4 hover:text-[var(--color-text)]">
+              storage notice
+            </Link>
+            .
+          </p>
         </div>
       </div>
     );
